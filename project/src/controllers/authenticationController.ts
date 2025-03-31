@@ -94,7 +94,7 @@ export const loginWithGoogle = async (c: Context) => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'http://127.0.0.1:8787', 
+        redirectTo: process.env.GOOGLE_REDIRECT_URI, 
       },
     })
 
@@ -118,7 +118,7 @@ export const loginWithFacebook = async (c: Context) => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
       options: {
-        redirectTo: 'http://127.0.0.1:8787', 
+        redirectTo: process.env.FACEBOOK_REDIRECT_URI, 
       }
     })
 
