@@ -4,6 +4,7 @@ import { profiles } from '../models/profile'
 
 export const signup = async (c: Context) => {
   try {
+    //to do: add the fields that the user needs to fill in the signup form like username , phone number ,etc
     const { email, password, fullName } = await c.req.json()
     
     if (!email || !password) {
@@ -19,6 +20,7 @@ export const signup = async (c: Context) => {
       console.error('Supabase auth error:', error)
       return c.json({ error: error.message }, 400)
     }
+    //to do: insert the data in the user entity or profile entity for future uses
        
     return c.json({ 
       message: 'Registration successful! Please check your email to confirm your account.',
@@ -86,3 +88,52 @@ export const logout = async (c: Context) => {
     return c.json({ error: 'Server error during logout' }, 500)
   }
 }
+
+export const loginWithGoogle = async (c: Context) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'http://127.0.0.1:8787', 
+      },
+    })
+
+    if (error) {
+      console.error('Google login error:', error)
+      return c.json({ error: error.message }, 400)
+    }
+
+    return c.json({
+      message: 'Redirecting to Google for authentication',
+      url: data.url,
+    }, 200)
+  } catch (error: unknown) {
+    console.error('Unexpected Google login error:', error)
+    return c.json({ error: 'Server error during Google login' }, 500)
+  }
+}
+
+export const loginWithFacebook = async (c: Context) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: 'http://127.0.0.1:8787', 
+      }
+    })
+
+    if (error) {
+      console.error('Facebook login error:', error)
+      return c.json({ error: error.message }, 400)
+    }
+
+    return c.json({
+      message: 'Redirecting to Facebook for authentication',
+      url: data.url, 
+    }, 200)
+  } catch (error: unknown) {
+    console.error('Unexpected Facebook login error:', error)
+    return c.json({ error: 'Server error during Facebook login' }, 500)
+  }
+}
+
