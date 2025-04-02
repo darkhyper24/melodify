@@ -5,4 +5,7 @@ const router = new Hono()
 router.post('/signup', AuthController.signup)
 router.post('/login', AuthController.login)
 router.post('/logout', authMiddleware, AuthController.logout)
+router.post('/login/google', AuthController.loginWithGoogle)
+router.post('/login/facebook', AuthController.loginWithFacebook)
+
 export default router
