@@ -1,0 +1,131 @@
+openapi: 3.0.0
+info:
+  title: Melodify api
+  description: api for a very *Melodifying* experience
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8787
+    description: localhost server for testing.
+
+paths:
+  /auth/signup:
+    post:
+      tags: [authentication]
+      summary: register new user
+      description: Create a new user and add it to the system
+      requestBody: 
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/Signup'
+      responses: 
+        '201':
+          description: added new user to system
+        '400':
+          description: invalid credintals
+        '500':
+          description: server did not respond
+
+  /auth/login:
+    post:
+      tags: [authentication]
+      summary: login user
+      description: logins registered user to system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses: 
+        '200':
+          description: Added new user to system
+        '400':
+          description: user already registered
+        '500':
+          description: server did not respond
+
+  /auth/logout:
+    post:
+      tags: [authentication]
+      summary: logout user
+      description: logout registered user from system if session is active
+      security:
+        - bearerAuth: []
+      responses: 
+        '200':
+          description: user logged out of the system
+        '401':
+          description: invalid token
+        '500':
+          description: server did not respond
+
+  /auth/login/google:
+    post:
+      tags: [authentication]
+      summary: login user with google
+      description: redirects user to google account
+      responses: 
+        '200':
+          description: user logged in the system
+        '401':
+          description: invalid token
+        '500':
+          description: server did not respond
+
+  /auth/login/facebook:
+    post:
+      tags: [authentication]
+      summary: login user with facebook
+      description: redirects user to facebook account
+      responses: 
+        '200':
+          description: user logged in the system
+        '401':
+          description: invalid token
+        '500':
+          description: server did not respond
+
+components:
+  schemas:
+    Signup:
+      type: object
+      required: 
+        - name
+        - password
+        - email
+      properties:
+        name:
+          type: string
+          example: johm
+        password:
+          type: string
+          format: password
+          example: kunafo
+        email:
+          type: string
+          format: email
+          example: unminru@gmail.com
+  
+    Login:
+      type: object
+      required: 
+        - password
+        - email
+      properties:
+        password:
+          type: string
+          format: password
+          example: kunafo
+        email:
+          type: string
+          format: email
+          example: unminru@gmail.com
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication

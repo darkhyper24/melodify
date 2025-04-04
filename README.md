@@ -14,8 +14,20 @@
 - **Frontend:** React/Next.js.  
 
 ## 🚀 Setup  
-1. Clone the repo  
+1. Clone the repo 
 2. Install dependencies (`bun install` or `npm install`)  
-3. Set up **Supabase** and environment variables  
-4. Run the app (`bun run dev`)  
+3. Set up **Supabase** and environment variables 
+```bash
+npm install @supabase/supabase-js
+``` 
+4. Run the backend:
+```bash
+cd melodify/project
+bun run dev
+```
+5. run the frontend:
+```bash
+cd melodify/client
+npm start
+```
 
