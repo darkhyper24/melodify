@@ -1,18 +1,19 @@
 .navbar {
   background-color: rgba(0, 0, 0, 0.9);
-  padding: 16px;
+  padding: 16px 0;
   position: fixed;
   width: 100%;
   top: 0;
   right: 0;
+  overflow: hidden;
 }
 
 .navbar-container {
-  max-width: 90%;
-  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  width: 100%;
+  padding: 0 32px;
+  box-sizing: border-box;
 }
 
 .navbar-logo {
@@ -21,51 +22,82 @@
   font-size: 24px;
   font-weight: 700;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin-right: auto;
 }
 
-.spotify-logo {
-  width: 130px;
-  height: auto;
+.nav-searchbar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
+}
+
+.nav-search {
+  width: 100%;
+  padding: 16px 30px;
+  border-radius: 500px;
+  border: none;
+  background-color: #242424;
   color: white;
+  font-size: 14px;
+  font-weight: 400;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.nav-search::placeholder {
+  color: #909090;
+  font-weight: 400;
+}
+
+.nav-search:focus {
+  background-color: #2a2a2a;
+  box-shadow: none;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .nav-link {
-  color: #a7a7a7;
   text-decoration: none;
   font-size: 16px;
   font-weight: 700;
-  transition: color 0.2s ease;
 }
 
-.nav-link.login {
-  color: #a7a7a7;
-  padding: 8px 32px;
-  border-radius: 500px;
-  border: 1px solid #a7a7a7;
-  transition: all 0.2s ease
-}
-.nav-link.login:hover {
-  color: #1ed760;
-  border-color: #1ed760;
-  transform: scale(1.04);
-}
 .nav-link.signup {
   color: #a7a7a7;
-  padding: 8px 32px;
+  background-color: transparent;
+  padding: 8px 24px;
   border-radius: 500px;
-  border: 1px solid #a7a7a7;
+  border: none;
+  font-weight: 700;
   transition: all 0.2s ease;
 }
 
 .nav-link.signup:hover {
-  color: #1ed760;
-  border-color: #1ed760;
+  color: white;
+  transform: scale(1.04);
+}
+
+.nav-link.login {
+  color: #000;
+  background-color: #fff;
+  padding: 13px 26px;
+  border-radius: 500px;
+  border: none;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.nav-link.login:hover {
+  color: #000;
+  background-color: #F0F0F0;
   transform: scale(1.04);
 }
 
