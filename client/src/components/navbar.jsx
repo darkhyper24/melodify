@@ -25,11 +25,14 @@ const Navbar = () => {
         <Link to="/" className="navbar-logo">
         <span>Melodify</span>
         </Link>
+        <div className="nav-searchbar">
+          <input className='nav-search' type="text" placeholder="What do you want to listen to?" />
+        </div>
         <div className="nav-links">
           {!isAuthenticated ? (
             <>
-              <Link to="/login" className="nav-link login">Log in</Link>
               <Link to="/signup" className="nav-link signup">Sign up</Link>
+              <Link to="/login" className="nav-link login">Log in</Link>
             </>
           ) : (
             <button 
