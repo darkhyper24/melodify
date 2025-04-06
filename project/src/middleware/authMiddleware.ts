@@ -12,12 +12,21 @@ export const authMiddleware = async (c: Context, next: Next) => {
     }
     try {
         const { data, error } = await supabase.auth.getUser(token)
+        
         if (error) {
+            if (error.message.includes('expired')) {
+                return c.json({ 
+                    error: 'Token expired',
+                    code: 'TOKEN_EXPIRED'
+                }, 401)
+            }
             return c.json({ error: 'Invalid token' }, 401)
         }
+        
         c.set('user', data.user)
         await next()
     } catch (error) {
+        console.error('Auth middleware error:', error)
         return c.json({ error: 'Server error during authentication' }, 500)
     }
 }
