@@ -1,14 +1,19 @@
 import { Context } from 'hono'
 import { supabase, db } from '../supabase/supabase'
 import { profiles } from '../models/profile'
+import { eq } from 'drizzle-orm'
+import { sql } from 'drizzle-orm';
 
 export const signup = async (c: Context) => {
   try {
-    //to do: add the fields that the user needs to fill in the signup form like username , phone number ,etc
-    const { email, password, fullName } = await c.req.json()
+    const { email, password, fullName, role, phone } = await c.req.json()
     
     if (!email || !password) {
       return c.json({ error: 'Email and password are required' }, 400)
+    }
+    
+    if (role !== 'user' && role !== 'artist') {
+      return c.json({ error: 'Invalid role. Must be either "user" or "artist"' }, 400)
     }
     
     const { data, error } = await supabase.auth.signUp({
@@ -20,11 +25,39 @@ export const signup = async (c: Context) => {
       console.error('Supabase auth error:', error)
       return c.json({ error: error.message }, 400)
     }
-    //to do: insert the data in the user entity or profile entity for future uses
+    
+   
+    if (data.user) {
+      try {
+        console.log('Attempting to create profile for user:', data.user.id);
+        
+        await db.insert(profiles).values({
+          id: data.user.id,
+          fullName: fullName || '',
+          role: role,
+          email: data.user.email,
+          phone: phone || null,
+          updatedAt: new Date()
+        });
+        
+        // Verifying that a profile was created successfully
+        const createdProfile = await db.query.profiles.findFirst({
+          where: eq(profiles.id, data.user.id)
+        });
+        
+        console.log('Profile created:', createdProfile);
+      } catch (dbError) {
+        console.error('Profile creation error:', dbError);
+        
+      }
+    }
        
     return c.json({ 
       message: 'Registration successful! Please check your email to confirm your account.',
-      user: data.user 
+      user: {
+        ...data.user,
+        role: role 
+      }
     }, 201)
   } catch (error: unknown) {
     console.error('Signup error:', error)
@@ -58,10 +91,21 @@ export const login = async (c: Context) => {
       return c.json({ error: error.message }, 401)
     }
     
+
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, data.user.id)
+    });
+    
     return c.json({
       message: 'Login successful',
-      session: data.session,
-      user: data.user
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_at: data.session.expires_at,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        role: profile?.role || 'user'
+      }
     }, 200)
     
   } catch (error: unknown) {
@@ -100,6 +144,7 @@ export const loginWithGoogle = async (c: Context) => {
 
     if (error) {
       console.error('Google login error:', error)
+      console.log('Google login error:', error.message)
       return c.json({ error: error.message }, 400)
     }
 
@@ -137,3 +182,79 @@ export const loginWithFacebook = async (c: Context) => {
   }
 }
 
+//this function is experimentatl
+export const setRole = async (c: Context) => {
+  try {
+    const user = c.get('user')
+    const { role } = await c.req.json()
+    
+    if (!role || (role !== 'user' && role !== 'artist')) {
+      return c.json({ error: 'Invalid role. Must be either "user" or "artist"' }, 400)
+    }
+    
+    // Update or create profile with selected role
+    const existingProfile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, user.id)
+    });
+    
+    if (existingProfile) {
+      await db.update(profiles)
+        .set({ role: role, updatedAt: new Date() })
+        .where(eq(profiles.id, user.id));
+    } else {
+      await db.insert(profiles).values({
+        id: user.id,
+        fullName: user.user_metadata?.full_name || '',
+        role: role,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
+    
+    return c.json({
+      message: 'Role set successfully',
+      role: role
+    }, 200)
+  } catch (error: unknown) {
+    console.error('Set role error:', error)
+    return c.json({ error: 'Server error setting role' }, 500)
+  }
+}
+
+
+export const refreshToken = async (c: Context) => {
+  try {
+    const { refresh_token } = await c.req.json()
+    
+    if (!refresh_token) {
+      return c.json({ error: 'Refresh token is required' }, 400)
+    }
+
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token
+    })
+    
+    if (error) {
+      console.error('Token refresh error:', error)
+      return c.json({ error: error.message }, 401)
+    }
+    
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, data.user.id)
+    });
+    
+    return c.json({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token, 
+      expires_at: data.session.expires_at,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        role: profile?.role || 'user'
+      }
+    }, 200)
+  } catch (error: unknown) {
+    console.error('Refresh token error:', error)
+    return c.json({ error: 'Server error during token refresh' }, 500)
+  }
+}

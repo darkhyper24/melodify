@@ -7,5 +7,6 @@ router.post('/login', AuthController.login)
 router.post('/logout', authMiddleware, AuthController.logout)
 router.post('/login/google', AuthController.loginWithGoogle)
 router.post('/login/facebook', AuthController.loginWithFacebook)
-
+router.post('/set-role', authMiddleware, AuthController.setRole)
+router.post('/refresh', AuthController.refreshToken)
 export default router
