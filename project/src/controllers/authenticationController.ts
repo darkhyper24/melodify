@@ -229,7 +229,7 @@ export const refreshToken = async (c: Context) => {
     if (!refresh_token) {
       return c.json({ error: 'Refresh token is required' }, 400)
     }
-
+    
     const { data, error } = await supabase.auth.refreshSession({
       refresh_token
     })
@@ -239,10 +239,20 @@ export const refreshToken = async (c: Context) => {
       return c.json({ error: error.message }, 401)
     }
     
-    const profile = await db.query.profiles.findFirst({
+    // Additional verification: Check user exists in our database
+    const userExists = await db.query.profiles.findFirst({
       where: eq(profiles.id, data.user.id)
     });
     
+    if (!userExists) {
+      console.error('User not found in database during token refresh:', data.user.id)
+      return c.json({ 
+        error: 'User account not found or deactivated',
+        code: 'INVALID_USER'
+      }, 401)
+    }
+    
+    // If we reach here, the user is authenticated in both Supabase and our database
     return c.json({
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token, 
@@ -250,7 +260,7 @@ export const refreshToken = async (c: Context) => {
       user: {
         id: data.user.id,
         email: data.user.email,
-        role: profile?.role || 'user'
+        role: userExists.role || 'user'
       }
     }, 200)
   } catch (error: unknown) {
