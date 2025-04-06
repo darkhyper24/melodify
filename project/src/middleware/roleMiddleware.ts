@@ -1,11 +1,8 @@
 import { Context, Next } from 'hono'
-import { db } from '../supabase/supabase'
-import { profiles } from '../models/profile'
-import { eq } from 'drizzle-orm'
+import { supabase } from '../supabase/supabase'
 
 export const artistMiddleware = async (c: Context, next: Next) => {
     // The authMiddleware should run before this middleware
-    // so we can expect the user to be set in the context
     const user = c.get('user')
     
     if (!user) {
@@ -13,10 +10,17 @@ export const artistMiddleware = async (c: Context, next: Next) => {
     }
     
     try {
-        // Get user profile with role
-        const profile = await db.query.profiles.findFirst({
-            where: eq(profiles.id, user.id)
-        });
+        // Get user profile with role using Supabase REST API
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+        
+        if (error) {
+            console.error('Profile fetch error:', error);
+            return c.json({ error: 'Error fetching user profile' }, 500);
+        }
         
         if (!profile) {
             return c.json({ error: 'User profile not found' }, 404)
