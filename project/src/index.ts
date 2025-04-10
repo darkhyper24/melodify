@@ -4,7 +4,7 @@ import router from './routes/authRoutes'
 import profileRouter from './routes/profileRoutes'
 import { initClients } from './supabase/supabase'
 import albumRouter from './routes/albumRoutes'
-
+import homeRoutes from './routes/homeRoutes'
 const app = new Hono()
 
 app.use('*', async (c, next) => {
@@ -31,4 +31,5 @@ app.get('/', (c) => c.text('welcome to melodify'))
 app.route('/auth', router)
 app.route('/profile', profileRouter)
 app.route('/albums', albumRouter)
+app.route('/home', homeRoutes)
 export default app
