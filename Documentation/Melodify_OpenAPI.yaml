@@ -262,3 +262,32 @@ components:
           description: Unauthorized - invalid or expired token
         '500':
           description: Server error
+
+
+  /albums:
+    get:
+      tags: [albums]
+      summary: Get all albums
+      description: Retrieves a list of all albums with their names and album covers
+      responses:
+        '200':
+          description: Successfully retrieved albums
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  albums:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "Greatest Hits"
+                        albumPic:
+                          type: string
+                          nullable: true
+                          example: "https://example.supabase.co/storage/v1/object/public/album_covers/album-id/cover.jpg"
+        '500':
+          description: Server error
