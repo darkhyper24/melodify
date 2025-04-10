@@ -6,7 +6,7 @@ interface SignupPayload {
   confirmPassword?: string;
   role: string;
   fullName: string;
-  phoneNumber: string;
+  phone: string;
 }
 
 export const signupUser = async (payload: SignupPayload) => {
@@ -15,7 +15,7 @@ export const signupUser = async (payload: SignupPayload) => {
     password: payload.password,
     role: payload.role,
     fullName: payload.fullName,
-    phoneNumber: payload.phoneNumber,
+    phone: payload.phone,
   });
 
   return response.data;
