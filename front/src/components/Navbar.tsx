@@ -6,13 +6,21 @@ import ProfileDropdown from './ProfileDropdown';
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = () => {
       try {
         if (typeof window !== 'undefined') {
-          const token = localStorage.getItem('token');
+          const token = localStorage.getItem('access_token') || localStorage.getItem('token');
           setIsAuthenticated(!!token);
+          
+          // If authenticated, fetch avatar
+          if (token) {
+            fetchAvatar(token);
+          } else {
+            setAvatarUrl(null);
+          }
         }
       } catch (error) {
         console.error('Error checking authentication:', error);
@@ -30,6 +38,26 @@ const Navbar = () => {
       window.removeEventListener("auth-change", checkAuth);
     };
   }, []);
+  
+  const fetchAvatar = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:8787/home', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch avatar');
+      }
+      
+      const data = await response.json();
+      setAvatarUrl(data.avatarUrl);
+    } catch (error) {
+      console.error('Error fetching avatar:', error);
+      setAvatarUrl(null);
+    }
+  };
 
   return (
     <nav className="bg-black/90 fixed w-full top-0 right-0 py-4 z-40">
@@ -63,7 +91,7 @@ const Navbar = () => {
               </Link>
             </>
           ) : (
-            <ProfileDropdown setIsAuthenticated={setIsAuthenticated} />
+            <ProfileDropdown setIsAuthenticated={setIsAuthenticated} avatarUrl={avatarUrl} />
           )}
         </div>
       </div>

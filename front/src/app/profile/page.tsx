@@ -12,11 +12,39 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">("success");
+  const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
     bio: "",
   });
+
+// Move this useEffect outside the showTemporaryMessage function
+useEffect(() => {
+  // Cleanup function to clear timeout when component unmounts
+  return () => {
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
+    }
+  };
+}, []);
+
+// Then define showTemporaryMessage correctly
+const showTemporaryMessage = (text: string, type: "success" | "error") => {
+  // Clear any existing timeout
+  if (messageTimeoutRef.current) {
+    clearTimeout(messageTimeoutRef.current);
+  }
+  
+  // Set the message
+  setMessage(text);
+  setMessageType(type);
+  
+  // Set a new timeout to clear the message after 6 seconds
+  messageTimeoutRef.current = setTimeout(() => {
+    setMessage("");
+  }, 6000);
+};
 
   // Fetch profile data
   const { data: profileData, isLoading, refetch } = useQuery<ProfileResponse>({
@@ -31,60 +59,40 @@ const ProfilePage = () => {
       router.push('/login');
     }
   }, [router]);
-  
-  useEffect(() => {
-    if (profileData?.error === 'Not authenticated' || profileData?.error === 'Session expired. Please log in again.') {
-      router.push('/login');
+// Keep this version
+const updateProfileMutation = useMutation<UpdateProfileResponse, Error, typeof formData>({
+  mutationFn: updateProfile,
+  onSuccess: (data) => {
+    if (data.error) {
+      showTemporaryMessage(data.error, "error");
+    } else {
+      showTemporaryMessage("Profile updated successfully", "success");
+      setIsEditing(false);
+      refetch();
     }
-  }, [profileData, router]);
+  },
+  onError: () => {
+    showTemporaryMessage("Failed to update profile", "error");
+  },
+});
 
-  useEffect(() => {
-    if (profileData?.profile) {
-      setFormData({
-        fullName: profileData.profile.fullName || "",
-        phone: profileData.profile.phone || "",
-        bio: profileData.profile.bio || "",
-      });
+// Keep this version
+const uploadAvatarMutation = useMutation({
+  mutationFn: uploadAvatar,
+  onSuccess: (data) => {
+    if (data.error) {
+      showTemporaryMessage(data.error, "error");
+    } else {
+      showTemporaryMessage("Avatar uploaded successfully", "success");
+      refetch();
     }
-  }, [profileData]);
-
-  const updateProfileMutation = useMutation<UpdateProfileResponse, Error, typeof formData>({
-    mutationFn: updateProfile,
-    onSuccess: (data) => {
-      if (data.error) {
-        setMessage(data.error);
-        setMessageType("error");
-      } else {
-        setMessage("Profile updated successfully");
-        setMessageType("success");
-        setIsEditing(false);
-        refetch();
-      }
-    },
-    onError: () => {
-      setMessage("Failed to update profile");
-      setMessageType("error");
-    },
-  });
+  },
+  onError: () => {
+    showTemporaryMessage("Failed to upload avatar", "error");
+  },
+});
 
 
-  const uploadAvatarMutation = useMutation({
-    mutationFn: uploadAvatar,
-    onSuccess: (data) => {
-      if (data.error) {
-        setMessage(data.error);
-        setMessageType("error");
-      } else {
-        setMessage("Avatar uploaded successfully");
-        setMessageType("success");
-        refetch();
-      }
-    },
-    onError: () => {
-      setMessage("Failed to upload avatar");
-      setMessageType("error");
-    },
-  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
