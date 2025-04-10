@@ -87,52 +87,6 @@ paths:
           description: invalid token
         '500':
           description: server did not respond
-
-components:
-  schemas:
-    Signup:
-      type: object
-      required: 
-        - name
-        - password
-        - email
-      properties:
-        name:
-          type: string
-          example: johm
-        password:
-          type: string
-          format: password
-          example: kunafo
-        email:
-          type: string
-          format: email
-          example: unminru@gmail.com
-  
-    Login:
-      type: object
-      required: 
-        - password
-        - email
-      properties:
-        password:
-          type: string
-          format: password
-          example: kunafo
-        email:
-          type: string
-          format: email
-          example: unminru@gmail.com
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: JWT token for authentication
-
-
-# Add these paths after your existing auth endpoints
-
   /profile:
     get:
       tags: [profile]
@@ -291,3 +245,250 @@ components:
                           example: "https://example.supabase.co/storage/v1/object/public/album_covers/album-id/cover.jpg"
         '500':
           description: Server error
+
+  /albums/user/{userId}:
+    get:
+      tags: [albums]
+      summary: Get user albums
+      description: Retrieves all albums created by a specific user
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: ID of the user whose albums to retrieve
+      responses:
+        '200':
+          description: Successfully retrieved user albums
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  albums:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "123e4567-e89b-12d3-a456-426614174000"
+                        name:
+                          type: string
+                          example: "Summer Hits 2024"
+                        albumPic:
+                          type: string
+                          nullable: true
+                          example: "https://example.supabase.co/storage/v1/object/public/album-pictures/album-id/cover.jpg"
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2024-04-10T12:00:00Z"
+                        artist:
+                          type: string
+                          example: "John Doe"
+        '404':
+          description: User not found
+        '500':
+          description: Server error
+
+  /albums/create:
+    post:
+      tags: [albums]
+      summary: Create new album
+      description: Creates a new album (requires artist role)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "My New Album"
+                album_pic:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: Album created successfully
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - user is not an artist
+        '500':
+          description: Server error
+
+  /albums/{id}:
+    delete:
+      tags: [albums]
+      summary: Delete album
+      description: Deletes an existing album (must be owner)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the album to delete
+      responses:
+        '200':
+          description: Album deleted successfully
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - not album owner
+        '404':
+          description: Album not found
+        '500':
+          description: Server error
+    
+    patch:
+      tags: [albums]
+      summary: Update album
+      description: Updates an existing album (must be owner)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the album to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Updated Album Name"
+                album_pic:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Album updated successfully
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - not album owner
+        '404':
+          description: Album not found
+        '500':
+          description: Server error
+
+  /profile/avatar:
+    get:
+      tags: [profile]
+      summary: Get user avatar
+      description: Retrieves the current user's avatar URL
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Avatar URL retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                    example: "https://example.supabase.co/storage/v1/object/public/avatars/user-id/avatar.jpg"
+        '401':
+          description: Unauthorized - invalid or expired token
+        '404':
+          description: Avatar not found
+        '500':
+          description: Server error
+  
+  /albums/{id}/upload:
+    post:
+      tags: [albums]
+      summary: Upload album picture
+      description: Uploads or updates album cover image (must be owner)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the album
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                album_pic:
+                  type: string
+                  format: binary
+                  description: Image file (JPEG, PNG, WebP) max 2MB
+      responses:
+        '200':
+          description: Album picture uploaded successfully
+        '400':
+          description: Invalid file format or size
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - not album owner
+        '404':
+          description: Album not found
+        '500':
+          description: Server error
+components:
+  schemas:
+    Signup:
+      type: object
+      required: 
+        - name
+        - password
+        - email
+      properties:
+        name:
+          type: string
+          example: johm
+        password:
+          type: string
+          format: password
+          example: kunafo
+        email:
+          type: string
+          format: email
+          example: unminru@gmail.com
+  
+    Login:
+      type: object
+      required: 
+        - password
+        - email
+      properties:
+        password:
+          type: string
+          format: password
+          example: kunafo
+        email:
+          type: string
+          format: email
+          example: unminru@gmail.com
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication 
