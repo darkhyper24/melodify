@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import router from './routes/authRoutes'
+import profileRouter from './routes/profileRoutes'
 import { initClients } from './supabase/supabase'
 
 const app = new Hono()
@@ -27,5 +28,5 @@ app.use('*', async (c, next) => {
 app.use('*', cors())
 app.get('/', (c) => c.text('welcome to melodify'))
 app.route('/auth', router)
-
+app.route('/profile', profileRouter)
 export default app
