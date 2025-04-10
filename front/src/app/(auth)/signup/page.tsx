@@ -13,6 +13,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [role, setRole] = useState("");
   const [message, setMessage] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
@@ -27,9 +28,9 @@ const Signup = () => {
     mutationFn: signupUser,
     onSuccess: (data) => {
       setMessage(data.message || "Signup complete");
-      // Redirect to homepage after successful signup
+      // Redirect to login page after successful signup
       setTimeout(() => {
-        router.push('/');
+        router.push('/login');
       }, 1500); // Short delay to show success message
     },
     onError: (error: any) => {
@@ -40,19 +41,20 @@ const Signup = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       setPasswordError("Passwords do not match");
       return;
     }
-    
+
     setPasswordError("");
-    
-    signupMutation.mutate({ 
-      email, 
-      password, 
+
+    signupMutation.mutate({
+      email,
+      password,
       fullName,
-      phoneNumber 
+      role,
+      phoneNumber
     });
   };
 
@@ -140,6 +142,29 @@ const Signup = () => {
               />
             </div>
             <div className="mb-6">
+  <label htmlFor="role" className="block mb-2 text-sm font-bold text-white">
+    Role
+  </label>
+  <select
+    id="role"
+    value={role}
+    onChange={(e) => setRole(e.target.value)}
+    required
+    className="appearance-none w-full p-3 border border-[#878787] rounded bg-[#242424] text-white text-base focus:outline-none focus:border-white"
+  >
+    <option value="" disabled hidden className="text-[#878787]">
+      Select your option
+    </option>
+    <option value="user" className="text-white">
+      user
+    </option>
+    <option value="admin" className="text-white">
+      artist
+    </option>
+  </select>
+</div>
+
+            <div className="mb-6">
               <label htmlFor="phoneNumber" className="block mb-2 text-sm font-bold">
                 Phone Number
               </label>
@@ -156,9 +181,8 @@ const Signup = () => {
             <button
               type="submit"
               disabled={signupMutation.isPending}
-              className={`w-full py-3 bg-[#1ed760] text-black font-bold rounded-full text-base hover:bg-[#1fdf64] hover:scale-[1.04] transition ${
-                signupMutation.isPending ? "opacity-70 cursor-not-allowed" : ""
-              }`}
+              className={`w-full py-3 bg-[#1ed760] text-black font-bold rounded-full text-base hover:bg-[#1fdf64] hover:scale-[1.04] transition ${signupMutation.isPending ? "opacity-70 cursor-not-allowed" : ""
+                }`}
             >
               {signupMutation.isPending ? "Signing up..." : "Sign up"}
             </button>
@@ -166,11 +190,10 @@ const Signup = () => {
         )}
 
         {message && (
-          <div className={`mt-4 p-3 rounded ${
-            message.includes("successful") || message.includes("complete") 
-              ? "bg-[rgba(30,215,96,0.1)] text-[#1ed760]" 
+          <div className={`mt-4 p-3 rounded ${message.includes("successful") || message.includes("complete")
+              ? "bg-[rgba(30,215,96,0.1)] text-[#1ed760]"
               : "bg-[rgba(255,0,0,0.1)] text-red-500"
-          } text-center`}>
+            } text-center`}>
             {message}
           </div>
         )}

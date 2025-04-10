@@ -1,27 +1,38 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { handleLogout } from './logout';
+import ProfileDropdown from './ProfileDropdown';
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem('token');
-      setIsAuthenticated(!!token);
+      try {
+        if (typeof window !== 'undefined') {
+          const token = localStorage.getItem('token');
+          setIsAuthenticated(!!token);
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        setIsAuthenticated(false);
+      }
     };
 
     checkAuth();
+    
     window.addEventListener("storage", checkAuth);
-    return () => window.removeEventListener("storage", checkAuth);
+    window.addEventListener("auth-change", checkAuth);
+    
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("auth-change", checkAuth);
+    };
   }, []);
 
   return (
-    <nav className="bg-black/90 fixed w-full top-0 right-0 overflow-hidden py-4 z-50">
+    <nav className="bg-black/90 fixed w-full top-0 right-0 py-4 z-40">
       <div className="flex items-center w-full px-8 box-border max-md:px-4">
         <Link href="/" className="text-white text-2xl font-bold mr-auto font-sans">
           Melodify
@@ -52,12 +63,7 @@ const Navbar = () => {
               </Link>
             </>
           ) : (
-            <button
-              onClick={() => handleLogout(setIsAuthenticated, router.push)}
-              className="text-[#a7a7a7] px-8 py-2 rounded-full border border-[#a7a7a7] font-bold transition-all duration-200 hover:text-[#1ed760] hover:border-[#1ed760] hover:scale-105 text-sm"
-            >
-              Log out
-            </button>
+            <ProfileDropdown setIsAuthenticated={setIsAuthenticated} />
           )}
         </div>
       </div>

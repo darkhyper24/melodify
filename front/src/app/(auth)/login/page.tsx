@@ -14,15 +14,25 @@ const LoginPage = () => {
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      if (data.session) {
-        localStorage.setItem('token', data.session.access_token);
+      if (data.access_token) {
+        localStorage.setItem('token', data.access_token);
+        // Store user role if available
+        if (data.user?.role) {
+          localStorage.setItem('userRole', data.user.role);
+        }
+        
+        // Dispatch a custom event to notify other components about the auth change
+        window.dispatchEvent(new Event('auth-change'));
+        
         setMessage("Login successful");
+        // Ensure proper redirection to homepage
         setTimeout(() => {
           router.push('/');
-          window.location.reload();
-        }, 1000);
+        }, 300);
+      } else if (data.error) {
+        setMessage(data.error);
       } else {
-        setMessage(data.error || "Login failed");
+        setMessage("Login failed");
       }
     },
     onError: (error: any) => {
@@ -48,7 +58,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center">
       <div className="w-full max-w-[350px] p-8">
         <h1 className="text-[50px] font-bold mb-12 text-center">Log in to Melodify</h1>
-        {message && <div className="mt-4 p-3 rounded bg-[rgba(30,215,96,0.1)] text-[#1ed760] text-center">{message}</div>}
+        {message && <div className={`mt-4 p-3 rounded ${message === "Login successful" ? "bg-[rgba(30,215,96,0.1)] text-[#1ed760]" : "bg-[rgba(255,0,0,0.1)] text-red-500"} text-center`}>{message}</div>}
 
         <div className="flex flex-col gap-2 mb-6">
           <button
