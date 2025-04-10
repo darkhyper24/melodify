@@ -6,11 +6,18 @@ interface LoginPayload {
 }
 
 interface LoginResponse {
-  message: string;
+  message?: string;
   session?: {
     access_token: string;
   };
-  user?: any;
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: number;
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+  };
   error?: string;
 }
 

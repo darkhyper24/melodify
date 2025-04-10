@@ -18,7 +18,12 @@ export const handleLogout = async (setIsAuthenticated: (v: boolean) => void, nav
       if (response.ok) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("userRole");
+        
         setIsAuthenticated(false);
+        
+        window.dispatchEvent(new Event('auth-change'));
+        
         console.log("Logged out successfully");
         navigate("/signup");
       } else {
