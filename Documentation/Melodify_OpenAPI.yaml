@@ -129,3 +129,136 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT token for authentication
+
+
+# Add these paths after your existing auth endpoints
+
+  /profile:
+    get:
+      tags: [profile]
+      summary: Get user profile
+      description: Retrieves the current user's profile information
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    type: object
+                    properties:
+                      fullName:
+                        type: string
+                      phone:
+                        type: string
+                        nullable: true
+                      email:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                      bio:
+                        type: string
+                        nullable: true
+        '401':
+          description: Unauthorized - invalid or expired token
+        '404':
+          description: Profile not found
+        '500':
+          description: Server error
+
+  /profile/upload:
+    post:
+      tags: [profile]
+      summary: Upload profile avatar
+      description: Uploads a new profile picture and updates the user's avatar URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Image file (JPEG, PNG, WebP) max 2MB
+      responses:
+        '200':
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Avatar uploaded and profile updated successfully
+                  avatarUrl:
+                    type: string
+                    example: https://example.supabase.co/storage/v1/object/public/avatars/user-id/12345.jpeg
+        '400':
+          description: Invalid request - missing or invalid file
+        '401':
+          description: Unauthorized - invalid or expired token
+        '500':
+          description: Server error
+
+  /profile/update:
+    patch:
+      tags: [profile]
+      summary: Update profile information
+      description: Updates the user's profile information (full name, bio, phone)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                  example: John Doe
+                bio:
+                  type: string
+                  example: Music enthusiast and aspiring producer
+                phone:
+                  type: string
+                  example: +1234567890
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Profile updated successfully
+                  updated:
+                    type: object
+                    properties:
+                      fullName:
+                        type: string
+                        nullable: true
+                      bio:
+                        type: string
+                        nullable: true
+                      phone:
+                        type: string
+                        nullable: true
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized - invalid or expired token
+        '500':
+          description: Server error
