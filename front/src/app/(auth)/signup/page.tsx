@@ -12,7 +12,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState("");
   const [message, setMessage] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -54,7 +54,7 @@ const Signup = () => {
       password,
       fullName,
       role,
-      phoneNumber
+      phone
     });
   };
 
@@ -165,18 +165,18 @@ const Signup = () => {
 </div>
 
             <div className="mb-6">
-              <label htmlFor="phoneNumber" className="block mb-2 text-sm font-bold">
-                Phone Number
-              </label>
-              <input
-                id="phoneNumber"
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="Enter your phone number"
-                required
-                className="w-full p-3 border border-[#878787] rounded bg-transparent text-white text-base focus:outline-none focus:border-white"
-              />
+            <label htmlFor="phone" className="block mb-2 text-sm font-bold">
+              Phone Number
+            </label>
+            <input
+  id="phone"
+  type="tel"
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+  placeholder="Enter your phone number"
+  required
+  className="w-full p-3 border border-[#878787] rounded bg-transparent text-white text-base focus:outline-none focus:border-white"
+/>
             </div>
             <button
               type="submit"
