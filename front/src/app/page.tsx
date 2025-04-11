@@ -13,17 +13,25 @@ const Home = () => {
   const [albumData, setAlbumData] = useState<Album[]>([]);
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<string>('user');
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
+      const role = localStorage.getItem('userRole') ?? 'user';
+      
       setIsAuthenticated(!!token);
+      setUserRole(role);
       
       if (!token) {
         router.push('/signup');
       }
     }
   }, [router]);
+  
+  const handleAddAlbum = () => {
+    router.push('/create-album');
+  };
   
   const { data, isLoading, isError } = useQuery({
     queryKey: ['albums'],
@@ -88,6 +96,21 @@ const Home = () => {
       {/* Main Content */}
       <main className="flex-1 bg-gradient-to-b from-[#1e1e1e] to-[#121212] overflow-y-auto p-6">
         <div className="max-w-[1955px] mx-auto">
+          {/* Artist-specific section */}
+          {userRole === 'artist' && (
+            <section className="mb-8">
+              <div className="bg-gradient-to-r from-[#3d3d3d] to-[#282828] p-6 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold mb-4">Artist Dashboard</h2>
+                <p className="text-[#b3b3b3] mb-6">Manage your music and connect with your fans</p>
+                <button 
+                  onClick={handleAddAlbum}
+                  className="flex items-center gap-2 bg-[#1ed760] text-black font-bold py-3 px-6 rounded-full hover:bg-[#1fdf64] hover:scale-105 transition-all duration-200"
+                >
+                  Add Album
+                </button>
+              </div>
+            </section>
+          )}
           {/* Content rendering based on loading/error state */}
           {(() => {
             if (isLoading) {
