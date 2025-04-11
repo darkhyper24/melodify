@@ -5,6 +5,7 @@ import profileRouter from './routes/profileRoutes'
 import { initClients } from './supabase/supabase'
 import albumRouter from './routes/albumRoutes'
 import homeRoutes from './routes/homeRoutes'
+import songRoutes from './routes/songRoutes'
 const app = new Hono()
 
 app.use('*', async (c, next) => {
@@ -32,4 +33,5 @@ app.route('/auth', router)
 app.route('/profile', profileRouter)
 app.route('/albums', albumRouter)
 app.route('/home', homeRoutes)
+app.route('/songs', songRoutes)
 export default app
