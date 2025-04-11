@@ -19,6 +19,7 @@ interface LoginResponse {
     role: string;
   };
   error?: string;
+  url?: string; // For OAuth redirects
 }
 
 export const loginUser = async (payload: LoginPayload): Promise<LoginResponse> => {
@@ -28,4 +29,26 @@ export const loginUser = async (payload: LoginPayload): Promise<LoginResponse> =
   });
 
   return response.data;
+};
+
+export const loginWithGoogle = async (): Promise<LoginResponse> => {
+  try {
+    const response = await axios.post("http://localhost:8787/auth/login/google", {
+      isSignup: false
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Google login error:", error);
+    throw error;
+  }
+};
+
+export const loginWithFacebook = async (): Promise<LoginResponse> => {
+  try {
+    const response = await axios.post("http://localhost:8787/auth/login/facebook");
+    return response.data;
+  } catch (error) {
+    console.error("Facebook login error:", error);
+    throw error;
+  }
 };
