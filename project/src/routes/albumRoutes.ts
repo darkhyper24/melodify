@@ -11,4 +11,6 @@ router.post('/create', authMiddleware, artistMiddleware, AlbumController.createA
 router.delete('/:id', authMiddleware, AlbumController.deleteAlbum)
 router.patch('/:id', authMiddleware, AlbumController.updateAlbum)
 router.post('/:id/upload', authMiddleware, AlbumController.uploadAlbumPicture)
+router.get('/', AlbumController.getAlbums)
+
 export default router

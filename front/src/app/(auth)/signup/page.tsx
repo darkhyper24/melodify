@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react";
-import { signupUser } from "@/api/signup";
+import { signupUser, signupWithGoogle, signupWithFacebook } from "@/api/signup";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
@@ -58,12 +58,37 @@ const Signup = () => {
     });
   };
 
-  const handleGoogleSignup = () => {
-    window.location.href = "http://localhost:8787/auth/login/google";
+  const handleGoogleSignup = async () => {
+    try {
+      setMessage("");
+      const data = await signupWithGoogle();
+      if (data?.url) {
+        // Store information that this was a signup so we can redirect to login after OAuth
+        localStorage.setItem('googleAuthAction', 'signup');
+        localStorage.setItem('redirectAfterAuth', '/login');
+        window.location.href = data.url;
+      } else {
+        setMessage("Error connecting to Google authentication service");
+      }
+    } catch (error: any) {
+      setMessage(error.response?.data?.error || "Error connecting to Google authentication service");
+      console.error(error);
+    }
   };
 
-  const handleFacebookSignup = () => {
-    window.location.href = "http://localhost:8787/auth/login/facebook";
+  const handleFacebookSignup = async () => {
+    try {
+      setMessage("");
+      const data = await signupWithFacebook();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        setMessage("Error connecting to Facebook authentication service");
+      }
+    } catch (error: any) {
+      setMessage(error.response?.data?.error || "Error connecting to Facebook authentication service");
+      console.error(error);
+    }
   };
 
   return (
@@ -107,6 +132,7 @@ const Signup = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
                 required
+                autoComplete="new-password"
                 className="w-full p-3 border border-[#878787] rounded bg-transparent text-white text-base focus:outline-none focus:border-white"
               />
             </div>
@@ -121,6 +147,7 @@ const Signup = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
                 required
+                autoComplete="new-password"
                 className="w-full p-3 border border-[#878787] rounded bg-transparent text-white text-base focus:outline-none focus:border-white"
               />
               {passwordError && (
@@ -158,7 +185,7 @@ const Signup = () => {
     <option value="user" className="text-white">
       user
     </option>
-    <option value="admin" className="text-white">
+    <option value="artist" className="text-white">
       artist
     </option>
   </select>
