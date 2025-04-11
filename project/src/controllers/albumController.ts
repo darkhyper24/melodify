@@ -258,12 +258,10 @@ export const uploadAlbumPicture = async (c: Context) => {
       return c.json({ error: 'Album picture file is required' }, 400)
     }
 
-    // Validate file size (2MB limit)
     if (file.size > 2 * 1024 * 1024) {
       return c.json({ error: 'Album picture must be smaller than 2MB' }, 400)
     }
 
-    // Validate file type
     const fileType = file.type
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(fileType)) {
       return c.json({ error: 'Only JPEG, PNG and WebP images are allowed' }, 400)

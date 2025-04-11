@@ -446,6 +446,250 @@ paths:
           description: Album not found
         '500':
           description: Server error
+
+
+  /songs/create:
+    post:
+      tags: [songs]
+      summary: Create new song
+      description: Creates a new song in the user's most recent album (requires artist role)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "My New Song"
+                song:
+                  type: string
+                  format: binary
+                  description: MP3 file (max 10MB)
+                category:
+                  type: string
+                  example: "Rock"
+                  nullable: true
+      responses:
+        '201':
+          description: Song created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  song:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      songUrl:
+                        type: string
+                      category:
+                        type: string
+                      albumName:
+                        type: string
+                      albumPic:
+                        type: string
+                        nullable: true
+                      artist:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+        '400':
+          description: Missing required fields or invalid file
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - user is not an artist
+        '404':
+          description: No album found for the user
+        '500':
+          description: Server error
+    /songs:
+    get:
+      tags: [songs]
+      summary: Get all songs
+      description: Retrieves a list of all songs with their details
+      responses:
+        '200':
+          description: Successfully retrieved songs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  songs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        songUrl:
+                          type: string
+                        category:
+                          type: string
+                          nullable: true
+                        albumName:
+                          type: string
+                        albumPic:
+                          type: string
+                          nullable: true
+                        artist:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+        '500':
+          description: Server error
+
+  /songs/album/{id}:
+    get:
+      tags: [songs]
+      summary: Get album songs
+      description: Retrieves all songs in a specific album
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the album to get songs from
+      responses:
+        '200':
+          description: Successfully retrieved album songs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  album:
+                    type: string
+                  songs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        songUrl:
+                          type: string
+                        category:
+                          type: string
+                          nullable: true
+                        artist:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+        '404':
+          description: Album not found
+        '500':
+          description: Server error
+
+  /songs/{id}:
+    delete:
+      tags: [songs]
+      summary: Delete song
+      description: Deletes an existing song (must be owner)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the song to delete
+      responses:
+        '200':
+          description: Song deleted successfully
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - not song owner
+        '404':
+          description: Song not found
+        '500':
+          description: Server error
+
+    patch:
+      tags: [songs]
+      summary: Update song
+      description: Updates an existing song's metadata (must be owner)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the song to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Updated Song Name"
+                category:
+                  type: string
+                  example: "Jazz"
+                  nullable: true
+      responses:
+        '200':
+          description: Song updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  song:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      songUrl:
+                        type: string
+                      category:
+                        type: string
+                      albumName:
+                        type: string
+                      albumPic:
+                        type: string
+                        nullable: true
+                      artist:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - not song owner
+        '404':
+          description: Song not found
+        '500':
+          description: Server error
 components:
   schemas:
     Signup:
