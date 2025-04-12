@@ -10,6 +10,8 @@ export const songs = pgTable('songs', {
     songUrl: text('song_url').notNull(),
     category: text('category'),
     userId: text('user_id').notNull().references(() => profiles.id),
-    albumId: text('album_id').notNull().references(() => albums.id)
+    albumId: text('album_id').notNull().references(() => albums.id),
+    cover: text('cover'),
+    lyrics: text('lyrics')
     
 });
