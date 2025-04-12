@@ -1,33 +1,43 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { loginUser } from '@/api/login';
+import { loginUser, loginWithGoogle, loginWithFacebook } from '@/api/login';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const router = useRouter();
+  
+  useEffect(() => {
+    const authError = localStorage.getItem('authError');
+    if (authError) {
+      setMessage(authError);
+      localStorage.removeItem('authError');
+    }
+  }, []);
 
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
       if (data.access_token) {
         localStorage.setItem('token', data.access_token);
-        // Store user role if available
         if (data.user?.role) {
           localStorage.setItem('userRole', data.user.role);
         }
-        
-        // Dispatch a custom event to notify other components about the auth change
+      
         window.dispatchEvent(new Event('auth-change'));
         
         setMessage("Login successful");
-        // Ensure proper redirection to homepage
+        // Redirect based on user role
         setTimeout(() => {
-          router.push('/');
+          if (data.user?.role === 'artist') {
+            router.push('/artist_homepage');
+          } else {
+            router.push('/');
+          }
         }, 300);
       } else if (data.error) {
         setMessage(data.error);
@@ -46,12 +56,37 @@ const LoginPage = () => {
     loginMutation.mutate({ email, password });
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8787/auth/login/google";
+  const handleGoogleLogin = async () => {
+    try {
+      setMessage("");
+      const data = await loginWithGoogle();
+      if (data?.url) {
+        // Store information that this was a login so we can check if user exists after OAuth
+        localStorage.setItem('googleAuthAction', 'login');
+        localStorage.setItem('redirectAfterAuth', '/');
+        window.location.href = data.url;
+      } else {
+        setMessage("Error connecting to Google authentication service");
+      }
+    } catch (error: any) {
+      setMessage(error.response?.data?.error || "Error connecting to Google authentication service");
+      console.error(error);
+    }
   };
 
-  const handleFacebookLogin = () => {
-    window.location.href = "http://localhost:8787/auth/login/facebook";
+  const handleFacebookLogin = async () => {
+    try {
+      setMessage("");
+      const data = await loginWithFacebook();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        setMessage("Error connecting to Facebook authentication service");
+      }
+    } catch (error: any) {
+      setMessage(error.response?.data?.error || "Error connecting to Facebook authentication service");
+      console.error(error);
+    }
   };
 
   return (
