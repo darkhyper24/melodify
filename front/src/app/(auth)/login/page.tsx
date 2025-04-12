@@ -31,9 +31,13 @@ const LoginPage = () => {
         window.dispatchEvent(new Event('auth-change'));
         
         setMessage("Login successful");
-        // Ensure proper redirection to homepage
+        // Redirect based on user role
         setTimeout(() => {
-          router.push('/');
+          if (data.user?.role === 'artist') {
+            router.push('/artist_homepage');
+          } else {
+            router.push('/');
+          }
         }, 300);
       } else if (data.error) {
         setMessage(data.error);
