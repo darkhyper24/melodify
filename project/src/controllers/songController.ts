@@ -1,6 +1,5 @@
 import { Context } from 'hono'
 import { supabase } from '../supabase/supabase'
-import { title } from 'process';
 
 type SongData = {
     id: string;
@@ -16,6 +15,59 @@ type SongData = {
       full_name: string;
     } | null;
   }
+//getting song info for the songs page
+export const getSongBasicInfo = async (c: Context) => {
+  try {
+    const songId = c.req.param('id')
+    if (!songId) {
+      return c.json({ error: 'Song ID is required' }, 400)
+    }
+    const { data: song, error } = await supabase
+      .from('song')
+      .select(`
+        id,
+        title,
+        song_url,
+        album_id,
+        user_id,
+        album (
+          name
+        ),
+        cover,
+        artist:user_id (
+          full_name
+        ),
+        lyrics
+      `)
+      .eq('id', songId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching song:', error)
+      return c.json({ error: 'Failed to fetch song' }, 500)
+    }
+    if (!song) {
+      return c.json({ error: 'Song not found' }, 404)
+    }
+
+    return c.json({
+      song: {
+        id: song.id,
+        title: song.title,
+        songUrl: song.song_url,
+        album: song.album?.name || null,
+        cover: song.cover || null,
+        artist: song.artist?.full_name || 'Unknown Artist',
+        lyrics: song.lyrics || null
+
+      }
+    }, 200)
+
+  } catch (error: unknown) {
+    console.error('Unexpected error in getSongBasicInfo:', error)
+    return c.json({ error: 'Server error fetching song' }, 500)
+  }
+}
 
 export const createSong = async (c: Context) => {
     try {

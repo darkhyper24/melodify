@@ -10,4 +10,5 @@ router.get('/', SongController.getSongs)
 router.get('/album/:id', SongController.getAlbumSongs)
 router.patch('/:id', authMiddleware, SongController.updateSong)
 router.delete('/:id', authMiddleware, SongController.deleteSong)
+router.get('/:id', SongController.getSongBasicInfo)
 export default router
