@@ -54,7 +54,8 @@ export const fetchAlbumSongs = async (albumId: string): Promise<AlbumSongsRespon
 export const uploadSong = async (
   title: string,
   category: string,
-  songFile: File
+  songFile: File,
+  albumId?: string
 ): Promise<{ success: boolean; error?: string; song?: any }> => {
   try {
     const token = localStorage.getItem("token");
@@ -68,6 +69,9 @@ export const uploadSong = async (
     formData.append('title', title);
     formData.append('category', category);
     formData.append('song', songFile);
+    if (albumId) {
+      formData.append('albumId', albumId);
+    }
     
     const response = await axios.post(
       `http://localhost:8787/songs/create`, 
@@ -139,6 +143,44 @@ export const uploadAlbumCover = async (
     return { 
       success: false,
       error: error.response?.data?.error || "Failed to upload album cover" 
+    };
+  }
+};
+
+/**
+ * Delete a song from an album
+ */
+export const deleteSong = async (songId: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      console.error("No authentication token found");
+      return { success: false, error: "Not authenticated" };
+    }
+    
+    await axios.delete(`http://localhost:8787/songs/${songId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting song:", error.response?.data || error.message);
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      return { success: false, error: "Session expired. Please log in again." };
+    }
+    if (error.response?.status === 403) {
+      return { success: false, error: "You don't have permission to delete this song" };
+    }
+    if (error.response?.status === 404) {
+      return { success: false, error: "Song not found" };
+    }
+    return { 
+      success: false,
+      error: error.response?.data?.error || "Failed to delete song" 
     };
   }
 };

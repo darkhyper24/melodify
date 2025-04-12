@@ -160,12 +160,6 @@ const ArtistHomepage = () => {
                       <BiPlus className="text-xl" />
                       Add New Album
                     </button>
-                    <Link 
-                      href="/stats" 
-                      className="bg-transparent border border-white text-white font-bold px-6 py-3 rounded-full hover:bg-white/10 transition-all"
-                    >
-                      View Stats
-                    </Link>
                   </div>
                 </section>
 
@@ -173,7 +167,6 @@ const ArtistHomepage = () => {
                 <section className="mb-12">
                   <div className="flex items-center justify-between mb-5">
                     <h2 className="text-2xl font-bold">Your Albums</h2>
-                    <span className="text-sm text-[#b3b3b3] font-bold hover:underline cursor-pointer">Manage all</span>
                   </div>
                   
                   {albumData.length === 0 ? (
@@ -239,6 +232,7 @@ const ArtistHomepage = () => {
                 </section>
                 
                 {/* Recently Added Section */}
+                {/* Commented out as requested
                 {albumData.length > 0 && (
                   <section className="mb-12">
                     <div className="flex items-center justify-between mb-5">
@@ -282,6 +276,7 @@ const ArtistHomepage = () => {
                     </div>
                   </section>
                 )}
+                */}
               </>
             );
           })()}

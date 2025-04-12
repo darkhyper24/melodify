@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { fetchAlbumSongs, Song } from '@/api/albumDetails';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchAlbumSongs, Song, deleteSong } from '@/api/albumDetails';
 import { BiMusic, BiPlus, BiUpload, BiArrowBack, BiPlay, BiPause, BiTrash } from 'react-icons/bi';
 import { MdMusicNote } from 'react-icons/md';
 import UploadSongModal from '@/components/UploadSongModal';
@@ -14,6 +14,7 @@ export default function AlbumPage() {
   const params = useParams();
   const albumId = params.id as string;
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isUploadSongModalOpen, setIsUploadSongModalOpen] = useState(false);
   const [isUploadCoverModalOpen, setIsUploadCoverModalOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function AlbumPage() {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [albumName, setAlbumName] = useState<string>('');
   const [albumCover, setAlbumCover] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Use useEffect for localStorage operations to avoid hydration errors
   useEffect(() => {
@@ -33,10 +35,23 @@ export default function AlbumPage() {
   }, [router]);
 
   // Fetch album songs
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['albumSongs', albumId],
     queryFn: () => fetchAlbumSongs(albumId),
     enabled: !!albumId && isAuthenticated
+  });
+  
+  // Delete song mutation
+  const deleteSongMutation = useMutation({
+    mutationFn: deleteSong,
+    onSuccess: () => {
+      // Refetch album songs after successful deletion
+      refetch();
+      setDeleteError(null);
+    },
+    onError: (error: any) => {
+      setDeleteError(error.response?.data?.error || 'Failed to delete song');
+    }
   });
 
   // Fetch album details to get cover image
@@ -143,6 +158,13 @@ export default function AlbumPage() {
           <span>Back to Artist Homepage</span>
         </button>
 
+        {/* Error message */}
+        {deleteError && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-3 rounded-md mb-6">
+            {deleteError}
+          </div>
+        )}
+        
         {/* Album header */}
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <div className="relative w-full md:w-64 h-64 bg-[#282828] rounded-md overflow-hidden shadow-lg group">
@@ -253,10 +275,20 @@ export default function AlbumPage() {
                   </div>
                   <div className="w-10 flex justify-center">
                     <button
-                      className="text-[#b3b3b3] hover:text-white"
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to delete "${song.title}"?`)) {
+                          deleteSongMutation.mutate(song.id);
+                        }
+                      }}
+                      className="text-[#b3b3b3] hover:text-red-500 transition-colors"
                       aria-label="Delete song"
+                      disabled={deleteSongMutation.isPending}
                     >
-                      <BiTrash />
+                      {deleteSongMutation.isPending && deleteSongMutation.variables === song.id ? (
+                        <span className="animate-pulse">...</span>
+                      ) : (
+                        <BiTrash className="text-lg" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -270,6 +302,7 @@ export default function AlbumPage() {
       <UploadSongModal 
         isOpen={isUploadSongModalOpen}
         onClose={() => setIsUploadSongModalOpen(false)}
+        albumId={albumId}
       />
       
       <UploadAlbumCoverModal

@@ -17,12 +17,19 @@ export interface ArtistAlbumsResponse {
  */
 export const fetchArtistAlbums = async (): Promise<ArtistAlbumsResponse> => {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    // Ensure we're only running this in the browser
+    if (typeof window === 'undefined') {
+      return { error: "Cannot fetch albums in server context" };
+    }
+    
+    const token = localStorage.getItem("token");
     
     if (!token) {
       console.error("No authentication token found");
       return { error: "Not authenticated" };
     }
+    
+    console.log("Using token for authentication:", token.substring(0, 10) + '...');
     
     const response = await axios.get("http://localhost:8787/albums/my-albums", {
       headers: {
@@ -34,9 +41,8 @@ export const fetchArtistAlbums = async (): Promise<ArtistAlbumsResponse> => {
   } catch (error: any) {
     console.error("Error fetching artist albums:", error.response?.data || error.message);
     if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("token");
-      }
+      console.error("Authentication failed:", error.response?.data);
+      localStorage.removeItem("token");
       return { error: "Session expired. Please log in again." };
     }
     return { 
