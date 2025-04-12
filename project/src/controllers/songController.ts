@@ -5,6 +5,7 @@ type SongData = {
     id: string;
     title: string;
     song_url: string;
+    cover: string | null;
     category: string | null;
     created_at: string;
     album: {
@@ -75,6 +76,7 @@ export const createSong = async (c: Context) => {
       const title = formData.get('title') as string
       const category = formData.get('category') as string
       const songFile = formData.get('song') as File
+      const coverFile = formData.get('cover') as File
       const user = c.get('user')
   
       if (!user) {
@@ -126,29 +128,64 @@ export const createSong = async (c: Context) => {
         return c.json({ error: 'No album found. Please create an album first' }, 404)
       }
   
-      const fileName = `${Date.now()}_${songFile.name}`
-      const filePath = `${album.id}/${fileName}`
-  
-      const arrayBuffer = await songFile.arrayBuffer()
-      const { data: uploadData, error: uploadError } = await supabase
+      const songFileName = `${Date.now()}_${songFile.name}`
+      const songFilePath = `${album.id}/${songFileName}`
+      const songArrayBuffer = await songFile.arrayBuffer()
+
+      const { error: songUploadError } = await supabase
         .storage
         .from('songs')
-        .upload(filePath, arrayBuffer, {
+        .upload(songFilePath, songArrayBuffer, {
           contentType: fileType,
           upsert: false
         })
-  
-      if (uploadError) {
-        console.error('Error uploading song:', uploadError)
+
+      if (songUploadError) {
+        console.error('Error uploading song:', songUploadError)
         return c.json({ error: 'Failed to upload song' }, 500)
       }
-  
-      const { data: urlData } = supabase
-        .storage
-        .from('songs')
-        .getPublicUrl(filePath)
-  
-      const songUrl = urlData.publicUrl
+
+      const { data: songUrlData } = supabase.storage.from('songs').getPublicUrl(songFilePath)
+      const songUrl = songUrlData.publicUrl
+      let coverUrl = null
+
+      // Handle cover file upload if provided
+      if (coverFile && coverFile instanceof File) {
+        const coverFileType = coverFile.type
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(coverFileType)) {
+          // Clean up song file if cover validation fails
+          await supabase.storage.from('songs').remove([songFilePath])
+          return c.json({ error: 'Only JPEG, PNG and WebP images are allowed for cover' }, 400)
+        }
+
+        if (coverFile.size > 2 * 1024 * 1024) {
+          // Clean up song file if cover validation fails
+          await supabase.storage.from('songs').remove([songFilePath])
+          return c.json({ error: 'Cover image must be smaller than 2MB' }, 400)
+        }
+
+        const coverFileName = `${Date.now()}_${coverFile.name}`
+        const coverFilePath = `${album.id}/${coverFileName}`
+        const coverArrayBuffer = await coverFile.arrayBuffer()
+
+        const { error: coverUploadError } = await supabase
+          .storage
+          .from('song-pic')
+          .upload(coverFilePath, coverArrayBuffer, {
+            contentType: coverFileType,
+            upsert: false
+          })
+
+        if (coverUploadError) {
+          // Clean up song file if cover upload fails
+          await supabase.storage.from('songs').remove([songFilePath])
+          console.error('Error uploading cover:', coverUploadError)
+          return c.json({ error: 'Failed to upload cover' }, 500)
+        }
+
+        const { data: coverUrlData } = supabase.storage.from('song-pic').getPublicUrl(coverFilePath)
+        coverUrl = coverUrlData.publicUrl
+      }
   
       const { data: song, error } = await supabase
         .from('song')
@@ -159,6 +196,7 @@ export const createSong = async (c: Context) => {
           category,
           user_id: profile.id,
           album_id: album.id,
+          cover: coverUrl,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -177,7 +215,7 @@ export const createSong = async (c: Context) => {
       if (error) {
         console.error('Error creating song:', error)
         // If database insert fails, try to clean up the uploaded file
-        await supabase.storage.from('song').remove([filePath])
+        await supabase.storage.from('song').remove([songFilePath])
         return c.json({ error: 'Failed to create song' }, 500)
       }
   
@@ -185,12 +223,13 @@ export const createSong = async (c: Context) => {
         song: {
           id: song.id,
           title: song.title,
-          songUrl: song.songUrl,
+          songUrl: song.song_url,
           category: song.category,
+          cover: song.cover,
           albumName: song.album?.name, 
           albumPic: song.album?.album_pic,
           artist: song.profiles?.full_name,
-          createdAt: song.createdAt
+          createdAt: song.created_at
         }
       }, 201)
   
@@ -231,6 +270,7 @@ export const getSongs = async (c: Context) => {
           id: song.id,
           title: song.title,
           songUrl: song.song_url,
+          cover: song.cover,
           category: song.category,
           albumName: song.album?.name, 
           albumPic: song.album?.album_pic,
@@ -291,6 +331,7 @@ export const getSongs = async (c: Context) => {
           id: song.id,
           title: song.title,
           songUrl: song.song_url,
+          cover: song.cover,
           category: song.category,
           artist: song.profiles?.full_name,
           createdAt: song.created_at
@@ -307,13 +348,16 @@ export const updateSong = async (c: Context) => {
     try {
       const songId = c.req.param('id')
       const user = c.get('user')
-      const updates = await c.req.json()
+      const formData = await c.req.formData()
+      const title = formData.get('title') as string
+      const category = formData.get('category') as string
+      const coverFile = formData.get('cover') as File
   
       if (!user) {
         return c.json({ error: 'Unauthorized' }, 401)
       }
   
-      if (!updates.title && !updates.category) {
+      if (!title && !category && !coverFile) {
         return c.json({ error: 'No valid update fields provided' }, 400)
       }
   
@@ -330,10 +374,73 @@ export const updateSong = async (c: Context) => {
       if (song.user_id !== user.id) {
         return c.json({ error: 'Unauthorized to update this song' }, 403)
       }
+
+      let coverUrl = song.cover
+
+      // Handle cover file update if provided
+      if ( coverFile && coverFile instanceof File) {
+        // Validate cover file
+        const coverFileType = coverFile.type
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(coverFileType)) {
+          return c.json({ error: 'Only JPEG, PNG and WebP images are allowed for cover' }, 400)
+        }
+
+        if (coverFile.size > 2 * 1024 * 1024) {
+          return c.json({ error: 'Cover image must be smaller than 2MB' }, 400)
+        }
+
+        // Delete old cover if exists
+        if (song.cover) {
+          try {
+            const pathMatch = song.cover.match(/\/song-pic\/(.+)$/)
+            if (pathMatch && pathMatch[1]) {
+              const oldPath = pathMatch[1]
+              const { error: deleteError } = await supabase
+                .storage
+                .from('song-pic')
+                .remove([oldPath])
+
+              if (deleteError) {
+                console.error('Error deleting old cover:', deleteError)
+                // Continue with upload anyway
+              } else {
+                console.log('Successfully deleted old cover:', oldPath)
+              }
+            }
+          } catch (deleteError) {
+            console.error('Exception while trying to delete old cover:', deleteError)
+          }
+        }
+
+        const coverFileName = `${Date.now()}_${coverFile.name}`
+        const coverFilePath = `${song.albumId}/${coverFileName}`
+        const coverArrayBuffer = await coverFile.arrayBuffer()
+
+        const { error: coverUploadError } = await supabase
+          .storage
+          .from('song-pic')
+          .upload(coverFilePath, coverArrayBuffer, {
+            contentType: coverFileType,
+            upsert: false
+          })
+
+        if (coverUploadError) {
+          console.error('Error uploading new cover:', coverUploadError)
+          return c.json({ error: 'Failed to upload new cover' }, 500)
+        }
+
+        const { data: coverUrlData } = supabase
+          .storage
+          .from('song-pic')
+          .getPublicUrl(coverFilePath)
+
+        coverUrl = coverUrlData.publicUrl
+      }
   
       const updateData = {
-        ...(updates.title && { title: updates.title }),
-        ...(updates.category && { category: updates.category }),
+        ...(title && { title: title }),
+        ...(category && { category: category }),
+        ...(coverUrl && { cover: coverUrl }),
         updated_at: new Date().toISOString()
       }
   
@@ -364,10 +471,11 @@ export const updateSong = async (c: Context) => {
           title: updatedSong.title,
           songUrl: updatedSong.song_url,
           category: updatedSong.category,
+          cover: updatedSong.cover,
           albumName: updatedSong.album?.name,
           albumPic: updatedSong.album?.album_pic,
           artist: updatedSong.profiles?.full_name,
-          createdAt: updatedSong.createdAt
+          createdAt: updatedSong.created_at
         }
       }, 200)
   
@@ -403,11 +511,13 @@ export const updateSong = async (c: Context) => {
       }
   
       // Delete the song file from storage if it exists
-      if (song.songUrl) {
+      if (song.song_url) {
         try {
-          const pathMatch = song.songUrl.match(/\/songs\/(.+)$/)
-          if (pathMatch && pathMatch[1]) {
-            const filePath = pathMatch[1]
+          const songPathMatch = song
+          .song_url
+          .match(/\/songs\/(.+)$/)
+          if (songPathMatch && songPathMatch[1]) {
+            const filePath = songPathMatch[1]
             const { error: deleteStorageError } = await supabase
               .storage
               .from('songs')
@@ -419,6 +529,22 @@ export const updateSong = async (c: Context) => {
           }
         } catch (deleteError) {
           console.error('Error deleting song file:', deleteError)
+        }
+      }
+
+      if (song.cover) {
+        try {
+          const coverPathMatch = song
+          .cover
+          .match(/\/song-pic\/(.+)$/)
+          if (coverPathMatch && coverPathMatch[1]) {
+            await supabase
+            .storage
+            .from('song-pic')
+            .remove([coverPathMatch[1]])
+          }
+        } catch (deleteError) {
+          console.error('Error deleting cover file:', deleteError)
         }
       }
   
