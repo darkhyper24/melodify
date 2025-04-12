@@ -55,6 +55,7 @@ export const uploadSong = async (
   title: string,
   category: string,
   songFile: File,
+  coverFile?: File | null,
   albumId?: string
 ): Promise<{ success: boolean; error?: string; song?: any }> => {
   try {
@@ -69,6 +70,12 @@ export const uploadSong = async (
     formData.append('title', title);
     formData.append('category', category);
     formData.append('song', songFile);
+    
+    // Add cover file if provided
+    if (coverFile) {
+      formData.append('cover', coverFile);
+    }
+    
     if (albumId) {
       formData.append('albumId', albumId);
     }
