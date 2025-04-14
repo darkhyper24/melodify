@@ -76,7 +76,6 @@ export const getSongBasicInfo = async (c: Context) => {
 
 export const createSong = async (c: Context) => {
     try {
-        const albumId = c.req.param('album_id')
         const formData = await c.req.formData();
         const title = formData.get("title") as string;
         const category = formData.get("category") as string;
@@ -116,12 +115,13 @@ export const createSong = async (c: Context) => {
             return c.json({ error: "Song file must be smaller than 10MB" }, 400);
         }
 
+        // Get user's most recent album
         const { data: album, error: albumError } = await supabase
             .from("album")
             .select("*")
             .eq("user_id", profile.id)
-            .eq('id', albumId)
             .order("created_at", { ascending: false })
+            .limit(1)
             .single();
 
         if (albumError || !album) {
@@ -549,3 +549,4 @@ export const deleteSong = async (c: Context) => {
         return c.json({ error: "Server error deleting song" }, 500);
     }
 };
+
