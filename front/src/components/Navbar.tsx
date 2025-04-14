@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import ProfileDropdown from "./ProfileDropdown";
 
@@ -63,12 +64,24 @@ const Navbar = () => {
         <nav className="bg-black/90 sticky w-full top-0 right-0 py-4 z-40">
             <div className="flex items-center w-full px-8 box-border max-md:px-4">
                 {userRole === "artist" ? (
-                    <Link href="/artist/home" className="text-white text-2xl font-bold mr-auto font-sans">
-                        Melodify
+                    <Link href="/artist/home" className="mr-auto">
+                        <Image 
+                            src="/logo.png" 
+                            alt="Melodify Logo" 
+                            width={130} 
+                            height={40} 
+                            className="object-contain"
+                        />
                     </Link>
                 ) : (
-                    <Link href="/user/home" className="text-white text-2xl font-bold mr-auto font-sans">
-                        Melodify
+                    <Link href="/user/home" className="mr-auto">
+                        <Image 
+                            src="/logo.png" 
+                            alt="Melodify Logo" 
+                            width={130} 
+                            height={40} 
+                            className="object-contain"
+                        />
                     </Link>
                 )}
 
