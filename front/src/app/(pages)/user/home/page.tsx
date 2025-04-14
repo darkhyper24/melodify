@@ -142,8 +142,9 @@ const Home = () => {
                                     </div>
                                     <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-6">
                                         {albums.map((album: Album, index: number) => (
-                                            <button
+                                            <Link
                                                 key={index}
+                                                href={`/user/album/${album.id}`}
                                                 className="bg-[#181818] p-4 rounded-md hover:bg-[#282828] cursor-pointer transition-all duration-200 group text-left w-full block"
                                                 onMouseEnter={() => setHoveredAlbum(index.toString())}
                                                 onMouseLeave={() => setHoveredAlbum(null)}
@@ -167,7 +168,7 @@ const Home = () => {
                                                 </div>
                                                 <h3 className="text-base font-bold mb-2 truncate">{album.name}</h3>
                                                 <p className="text-sm text-[#b3b3b3] truncate">Album</p>
-                                            </button>
+                                            </Link>
                                         ))}
                                     </div>
                                 </section>
@@ -184,8 +185,9 @@ const Home = () => {
                                             .reverse()
                                             .slice(0, 5)
                                             .map((album: Album, index: number) => (
-                                                <button
+                                                <Link
                                                     key={`recent-${index}`}
+                                                    href={`/user/album/${album.id}`}
                                                     className="bg-[#181818] p-4 rounded-md hover:bg-[#282828] cursor-pointer transition-all duration-200 group text-left w-full block"
                                                     onMouseEnter={() => setHoveredAlbum(`recent-${index}`)}
                                                     onMouseLeave={() => setHoveredAlbum(null)}
@@ -209,7 +211,7 @@ const Home = () => {
                                                     </div>
                                                     <h3 className="text-base font-bold mb-2 truncate">{album.name}</h3>
                                                     <p className="text-sm text-[#b3b3b3] truncate">Album</p>
-                                                </button>
+                                                </Link>
                                             ))}
                                     </div>
                                 </section>
