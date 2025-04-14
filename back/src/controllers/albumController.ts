@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { supabase } from "../supabase/supabase";
-import { profiles } from "./../models/profile";
+import { profiles } from "../models/profile";
 
 type AlbumData = {
     id: string;

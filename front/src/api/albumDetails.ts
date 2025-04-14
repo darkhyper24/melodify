@@ -77,13 +77,11 @@ export const uploadSong = async (
         // Add cover file if provided
         if (coverFile) {
             formData.append("cover", coverFile);
+        } if (!albumId) {
+            return { success: false, error: "Album ID is required" };
         }
 
-        if (albumId) {
-            formData.append("albumId", albumId);
-        }
-
-        const response = await axios.post(`http://localhost:8787/songs/create`, formData, {
+        const response = await axios.post(`http://localhost:8787/songs/create/${albumId}`, formData, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data",
