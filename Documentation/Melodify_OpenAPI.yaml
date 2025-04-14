@@ -448,13 +448,20 @@ paths:
           description: Server error
 
 
-  /songs/create:
+  /songs/create/{album_id}:
     post:
       tags: [songs]
       summary: Create new song
-      description: Creates a new song in the user's most recent album (requires artist role)
+      description: Creates a new song in artist desired album (requires artist role)
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: album_id
+          required: true
+          schema:
+            type: string
+          description: ID of the album to add the song to
       requestBody:
         required: true
         content:
@@ -515,7 +522,7 @@ paths:
         '403':
           description: Forbidden - user is not an artist
         '404':
-          description: No album found for the user
+          description: No album found for the artist
         '500':
           description: Server error
   /songs:
