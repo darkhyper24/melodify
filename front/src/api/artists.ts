@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 export interface Album {
+  id: string;
   name: string;
   albumPic: string | null;
 }

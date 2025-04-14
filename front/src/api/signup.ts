@@ -20,3 +20,25 @@ export const signupUser = async (payload: SignupPayload) => {
 
   return response.data;
 };
+
+export const signupWithGoogle = async () => {
+  try {
+    const response = await axios.post("http://localhost:8787/auth/login/google", {
+      isSignup: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Google signup error:", error);
+    throw error;
+  }
+};
+
+export const signupWithFacebook = async () => {
+  try {
+    const response = await axios.post("http://localhost:8787/auth/login/facebook");
+    return response.data;
+  } catch (error) {
+    console.error("Facebook signup error:", error);
+    throw error;
+  }
+};

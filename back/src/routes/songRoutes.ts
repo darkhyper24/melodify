@@ -5,7 +5,7 @@ import { artistMiddleware } from '../middleware/roleMiddleware'
 
 const router = new Hono()
 
-router.post('/create', authMiddleware, artistMiddleware, SongController.createSong)
+router.post('/create/:album_id', authMiddleware, artistMiddleware, SongController.createSong)
 router.get('/', SongController.getSongs)
 router.get('/album/:id', SongController.getAlbumSongs)
 router.patch('/:id', authMiddleware, SongController.updateSong)

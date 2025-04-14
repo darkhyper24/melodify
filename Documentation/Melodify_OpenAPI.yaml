@@ -448,13 +448,20 @@ paths:
           description: Server error
 
 
-  /songs/create:
+  /songs/create/{album_id}:
     post:
       tags: [songs]
       summary: Create new song
-      description: Creates a new song in the user's most recent album (requires artist role)
+      description: Creates a new song in artist desired album (requires artist role)
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: album_id
+          required: true
+          schema:
+            type: string
+          description: ID of the album to add the song to
       requestBody:
         required: true
         content:
@@ -462,13 +469,17 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                title:
                   type: string
                   example: "My New Song"
                 song:
                   type: string
                   format: binary
                   description: MP3 file (max 10MB)
+                cover:
+                  type: string
+                  format: binary
+                  description: Cover image (JPEG, PNG, WebP) max 2MB
                 category:
                   type: string
                   example: "Rock"
@@ -490,6 +501,8 @@ paths:
                         type: string
                       songUrl:
                         type: string
+                      cover:
+                        type: string
                       category:
                         type: string
                       albumName:
@@ -509,10 +522,10 @@ paths:
         '403':
           description: Forbidden - user is not an artist
         '404':
-          description: No album found for the user
+          description: No album found for the artist
         '500':
           description: Server error
-    /songs:
+  /songs:
     get:
       tags: [songs]
       summary: Get all songs
@@ -535,6 +548,8 @@ paths:
                         name:
                           type: string
                         songUrl:
+                          type: string
+                        cover:
                           type: string
                         category:
                           type: string
@@ -584,6 +599,8 @@ paths:
                         name:
                           type: string
                         songUrl:
+                          type: string
+                        cover:
                           type: string
                         category:
                           type: string
@@ -640,7 +657,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -651,6 +668,10 @@ paths:
                   type: string
                   example: "Jazz"
                   nullable: true
+                cover:
+                  type: string
+                  format: binary
+                  description: Cover image (JPEG, PNG, WebP) max 2MB
       responses:
         '200':
           description: Song updated successfully
@@ -667,6 +688,8 @@ paths:
                       name:
                         type: string
                       songUrl:
+                        type: string
+                      cover:
                         type: string
                       category:
                         type: string
@@ -710,6 +733,9 @@ components:
           type: string
           format: email
           example: unminru@gmail.com
+        role:
+          type: string
+          example: artist
   
     Login:
       type: object
