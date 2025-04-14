@@ -549,4 +549,3 @@ export const deleteSong = async (c: Context) => {
         return c.json({ error: "Server error deleting song" }, 500);
     }
 };
-
