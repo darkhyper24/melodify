@@ -574,6 +574,7 @@ export const getPlaylistSongs = async (c: Context) => {
             song_url,
             category,
             created_at,
+            cover,
             album (
               name,
               album_pic
