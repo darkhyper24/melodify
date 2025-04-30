@@ -4,16 +4,19 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAlbumById, fetchAlbumSongs } from "@/api/albumDetails";
-import { BiMusic, BiArrowBack, BiPause, BiPlay } from "react-icons/bi";
+import { BiMusic, BiArrowBack, BiPause, BiPlay, BiPlus } from "react-icons/bi";
 import { MdMusicNote } from "react-icons/md";
 import { usePlayer } from "@/providers/PlayerProvider";
+import AddToPlaylistModal from "@/components/AddToPlaylistModal";
 
 export default function AlbumPage() {
     const params = useParams();
     const albumId = params.id as string;
     const router = useRouter();
 
-    const { currentSong, isPlaying, playSong, togglePlay } = usePlayer();
+    const { currentSong, isPlaying, playSong, togglePlay, playQueue } = usePlayer();
+    const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
+    const [isAddToPlaylistModalOpen, setIsAddToPlaylistModalOpen] = useState(false);
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authCheckComplete, setAuthCheckComplete] = useState(false);
@@ -50,6 +53,61 @@ export default function AlbumPage() {
             console.error("Error fetching songs:", songsDataError);
         }
     }, [songsDataIsError, songsDataError]);
+
+    // Add a utility function to calculate duration
+    const calculateDuration = (url: string): Promise<string> => {
+        return new Promise((resolve) => {
+            try {
+                const audio = new Audio();
+                
+                audio.addEventListener('loadedmetadata', () => {
+                    if (audio.duration && !isNaN(audio.duration)) {
+                        const minutes = Math.floor(audio.duration / 60);
+                        const seconds = Math.floor(audio.duration % 60);
+                        resolve(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
+                    } else {
+                        resolve('--:--');
+                    }
+                });
+                
+                audio.addEventListener('error', () => {
+                    resolve('--:--');
+                });
+                
+                audio.src = url;
+                audio.load();
+                
+                // Set a timeout to resolve if metadata isn't loaded
+                setTimeout(() => resolve('--:--'), 3000);
+            } catch (error) {
+                resolve('--:--');
+            }
+        });
+    };
+
+    // Add a state for song durations
+    const [songDurations, setSongDurations] = useState<Record<string, string>>({});
+
+    // Load durations when songs are loaded
+    useEffect(() => {
+        if (songsData?.songs) {
+            const loadDurations = async () => {
+                const durations: Record<string, string> = {};
+                
+                for (const song of songsData.songs || []) {
+                    if (song.songUrl) {
+                        durations[song.id] = await calculateDuration(song.songUrl);
+                    } else {
+                        durations[song.id] = '--:--';
+                    }
+                }
+                
+                setSongDurations(durations);
+            };
+            
+            loadDurations();
+        }
+    }, [songsData]);
 
     if (!authCheckComplete) {
         return null;
@@ -111,46 +169,102 @@ export default function AlbumPage() {
                 <div>
                     <h2 className="text-2xl font-bold mb-6">Songs</h2>
                     {songs.length > 0 ? (
-                        songs.map((song) => (
-                            <div
-                                key={song.id}
-                                className="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-4 py-3 hover:bg-white/10 transition-colors items-center"
-                            >
-                                <div className="w-10 text-center flex justify-center">
-                                    {currentSong?.id === song.id && isPlaying ? (
-                                        <button onClick={togglePlay} className="text-[#1ed760]" aria-label="Pause">
-                                            <BiPause className="text-xl" />
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => playSong({ ...song, album: album.name, album_id: album.id })}
-                                            className="text-white opacity-70 hover:opacity-100"
-                                            aria-label="Play"
-                                        >
-                                            <BiPlay className="text-xl" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-[#333] flex items-center justify-center rounded">
-                                        {song.cover ? (
-                                            <img src={song.cover} alt={song.title} className="w-full h-full object-cover rounded" />
+                        <>
+                            <div className="flex mb-4">
+                                <button
+                                    onClick={() => {
+                                        if (songs.length > 0) {
+                                            // Normalize the songs to match the Song interface
+                                            const normalizedSongs = songs.map(song => ({
+                                                ...song,
+                                                album: album?.name || 'Unknown',
+                                                album_id: album?.id || song.id,
+                                                lyrics: song.lyrics || []
+                                            }));
+                                            
+                                            // Play all songs in the album as a queue
+                                            playQueue(normalizedSongs, 0);
+                                        }
+                                    }}
+                                    className="bg-[#1ed760] text-black font-bold rounded-full w-12 h-12 flex items-center justify-center hover:scale-105 transition-all"
+                                >
+                                    <BiPlay className="text-xl ml-1" />
+                                </button>
+                            </div>
+                            {songs.map((song, index) => (
+                                <div
+                                    key={song.id}
+                                    className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-4 py-3 hover:bg-white/10 transition-colors items-center"
+                                >
+                                    <div className="w-10 text-center flex justify-center">
+                                        {currentSong?.id === song.id && isPlaying ? (
+                                            <button onClick={togglePlay} className="text-[#1ed760]" aria-label="Pause">
+                                                <BiPause className="text-xl" />
+                                            </button>
                                         ) : (
-                                            <MdMusicNote className="text-3xl text-[#b3b3b3]" />
+                                            <button
+                                                onClick={() => {
+                                                    // Normalize the songs to match the Song interface
+                                                    const normalizedSongs = songs.map(s => ({
+                                                        ...s,
+                                                        album: album?.name || 'Unknown',
+                                                        album_id: album?.id || s.id,
+                                                        lyrics: s.lyrics || []
+                                                    }));
+                                                    
+                                                    // Play the album starting from this song
+                                                    playQueue(normalizedSongs, index);
+                                                }}
+                                                className="text-white opacity-70 hover:opacity-100"
+                                                aria-label="Play"
+                                            >
+                                                <BiPlay className="text-xl" />
+                                            </button>
                                         )}
                                     </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-[#333] flex items-center justify-center rounded">
+                                            {song.cover ? (
+                                                <img src={song.cover} alt={song.title} className="w-full h-full object-cover rounded" />
+                                            ) : (
+                                                <MdMusicNote className="text-3xl text-[#b3b3b3]" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">{song.title}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-[#b3b3b3]">{song.category || "-"}</div>
+                                    <div className="text-[#b3b3b3]">{songDurations[song.id] || '--:--'}</div>
                                     <div>
-                                        <p className="font-medium">{song.title}</p>
+                                        <button 
+                                            onClick={() => {
+                                                setSelectedSongId(song.id);
+                                                setIsAddToPlaylistModalOpen(true);
+                                            }}
+                                            className="text-[#b3b3b3] hover:text-white flex items-center gap-1 bg-[#333] hover:bg-[#444] px-3 py-1 rounded-full text-sm"
+                                        >
+                                            <BiPlus className="text-lg" />
+                                            <span>Add to playlist</span>
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="text-[#b3b3b3]">{song.category || "-"}</div>
-                            </div>
-                        ))
+                            ))}
+                        </>
                     ) : (
                         <p className="text-[#b3b3b3]">No songs available for this album.</p>
                     )}
                 </div>
             </div>
+            
+            {/* Add to Playlist Modal */}
+            {selectedSongId && (
+                <AddToPlaylistModal
+                    isOpen={isAddToPlaylistModalOpen}
+                    onClose={() => setIsAddToPlaylistModalOpen(false)}
+                    songId={selectedSongId}
+                />
+            )}
         </div>
     );
 }
