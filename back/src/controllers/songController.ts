@@ -480,7 +480,7 @@ export const updateSong = async (c: Context) => {
         return c.json({ error: "Server error updating song" }, 500);
     }
 };
-
+//deletes song from artist album
 export const deleteSong = async (c: Context) => {
     try {
         const songId = c.req.param("id");
@@ -549,3 +549,133 @@ export const deleteSong = async (c: Context) => {
         return c.json({ error: "Server error deleting song" }, 500);
     }
 };
+
+
+//get all songs in a users playlist
+export const getPlaylistSongs = async (c: Context) => {
+    try {
+        const playlistId = c.req.param("id");
+        const user = c.get("user");
+        const { data: playlist, error: playlistError } = await supabase.from("Playlist").select("id, name").eq("id", playlistId).single();
+
+        if (playlistError || !playlist) {
+            return c.json({ error: "playlist not found" }, 404);
+        }
+        if (!user) {
+            return c.json({ error: "Unauthorized" }, 401);
+        }
+        const { data: songs, error } = await supabase
+            .from("playlist_song")
+            .select(
+                `
+          song_id,
+          song:song_id (
+            title,
+            song_url,
+            category,
+            created_at,
+            cover,
+            album (
+              name,
+              album_pic
+            ),
+            profiles (
+              full_name
+            )
+              )`
+          ).eq("playlist_id", playlistId);
+        if (error) {
+            console.error("Error fetching playlist songs:", error);
+            return c.json({ error: "Failed to fetch playlist songs" }, 500);
+    }
+    const formattedSongs = songs.map((item: { song_id: string; song: SongData }) => ({
+        id: item.song_id,
+        title: item.song.title,
+        artist: item.song.profiles?.full_name,
+        albumName: item.song.album?.name,
+        albumCover: item.song.album?.album_pic,
+        category: item.song.category,
+        songUrl: item.song.song_url,
+        coverImage: item.song.cover,
+        createdAt: new Date(item.song.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        })
+    }));
+
+    return c.json(
+        {
+            playlistName: playlist.name,
+            songsCount: formattedSongs.length,
+            songs: formattedSongs
+        }, 200);
+    }
+    catch (error){
+        console.error("Unexpected error in getPlaylistSongs:", error);
+        return c.json({ error: "Server error fetching playlist songs" }, 500);
+    }
+};
+
+
+//add song to playlist
+export const addSongToPlaylist = async (c: Context) => {
+    try{
+        const user = c.get("user");
+        const playlistId = c.req.param("id");
+        const { songId } = await c.req.json();
+        if (!user) {
+            return c.json({ error: "Unauthorized" }, 401);
+        }
+        if (!songId) {
+            return c.json({ error: "Song ID is required" }, 400);
+        }
+        const { data: playlist, error: playlistError } = await supabase
+        .from("Playlist")
+        .select("id, user_id")
+        .eq("id", playlistId)
+        .single();
+        if (playlistError || !playlist) {
+            return c.json({ error: "Playlist not found" }, 404);
+        }
+        if (playlist.user_id !== user.id) {
+            return c.json({ error: "Unauthorized to add song to this playlist" }, 403);
+        }
+        const { data: song, error: songError } = await supabase
+        .from("song")
+        .select("id")
+        .eq("id", songId)
+        .single();
+
+        if (songError || !song) {
+            return c.json({ error: "Song not found" }, 404);
+        }
+        const { data: existingSong, error: existingError } = await supabase
+            .from("playlist_song")
+            .select("*")
+            .eq("playlist_id", playlistId)
+            .eq("song_id", songId)
+            .single();
+
+        if (existingSong) {
+            return c.json({ message: "Song already in playlist" }, 200);
+        }
+        const { error: insertError } = await supabase
+            .from("playlist_song")
+            .insert({
+                playlist_id: playlistId,
+                song_id: songId,
+            });
+        if (insertError) {
+            console.error("Error adding song to playlist:", insertError);
+            return c.json({ error: "Failed to add song to playlist" }, 500);
+        }
+        return c.json({ message: "Song added to playlist" }, 201);
+
+    }
+    catch (error) {
+        console.error("Unexpected error in addSongToPlaylist:", error);
+        return c.json({ error: "Server error adding song to playlist" }, 500);
+    }
+
+}

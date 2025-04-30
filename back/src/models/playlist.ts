@@ -1,10 +1,8 @@
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { profiles } from './profile';
 
-export const playlists = pgTable('playlists', {
+export const playlist = pgTable('Playlist', {
     id: text('id').primaryKey(),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
     name: text('name').notNull(),
-    userId: text('user_id').notNull().references(() => profiles.id),
+    user_id: text('user_id').notNull().references(() => profiles.id),
 });

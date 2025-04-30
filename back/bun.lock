@@ -10,14 +10,14 @@
         "hono": "^4.7.5",
         "pg": "^8.14.1",
         "postgres": "^3.4.5",
-        "react-router-dom": "^7.4.1",
+        "react-router-dom": "^7.4.1"
       },
       "devDependencies": {
         "@cloudflare/workers-types": "^4.20250214.0",
         "drizzle-kit": "^0.30.6",
-        "wrangler": "^4.4.0",
-      },
-    },
+        "wrangler": "^4.4.0"
+      }
+    }
   },
   "packages": {
     "@cloudflare/kv-asset-handler": ["@cloudflare/kv-asset-handler@0.4.0", "", { "dependencies": { "mime": "^3.0.0" } }, "sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA=="],
@@ -256,7 +256,7 @@
 
     "js-base64": ["js-base64@3.7.7", "", {}, "sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw=="],
 
-    "libsql": ["libsql@0.5.5", "", { "dependencies": { "@neon-rs/load": "^0.0.4", "detect-libc": "2.0.2" }, "optionalDependencies": { "@libsql/darwin-arm64": "0.5.5", "@libsql/darwin-x64": "0.5.5", "@libsql/linux-arm64-gnu": "0.5.5", "@libsql/linux-arm64-musl": "0.5.5", "@libsql/linux-x64-gnu": "0.5.5", "@libsql/linux-x64-musl": "0.5.5", "@libsql/win32-x64-msvc": "0.5.5" }, "os": [ "linux", "win32", "darwin", ], "cpu": [ "x64", "arm64", ] }, "sha512-TEFJ1X6lP0yDZIUYznlvQnzdajQ7TEPAAw1C9AvFiDp4OSBiH//yj3VHbYQSFkeHtFvL+6O4waOWQM1LA5Qggw=="],
+    "libsql": ["libsql@0.5.5", "", { "dependencies": { "@neon-rs/load": "^0.0.4", "detect-libc": "2.0.2" }, "optionalDependencies": { "@libsql/darwin-arm64": "0.5.5", "@libsql/darwin-x64": "0.5.5", "@libsql/linux-arm64-gnu": "0.5.5", "@libsql/linux-arm64-musl": "0.5.5", "@libsql/linux-x64-gnu": "0.5.5", "@libsql/linux-x64-musl": "0.5.5", "@libsql/win32-x64-msvc": "0.5.5" }, "os": [ "linux", "win32", "darwin" ], "cpu": [ "x64", "arm64" ] }, "sha512-TEFJ1X6lP0yDZIUYznlvQnzdajQ7TEPAAw1C9AvFiDp4OSBiH//yj3VHbYQSFkeHtFvL+6O4waOWQM1LA5Qggw=="],
 
     "mime": ["mime@3.0.0", "", { "bin": { "mime": "cli.js" } }, "sha512-jSCU7/VB1loIWBZe14aEYHU/+1UMEHoaO7qxCOVJOw9GgH72VAWppxNcjU+x9a2k3GSIBXNKxXQFqRvvZ7vr3A=="],
 
@@ -474,6 +474,6 @@
 
     "wrangler/esbuild/@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.24.2", "", { "os": "win32", "cpu": "ia32" }, "sha512-q+iGUwfs8tncmFC9pcnD5IvRHAzmbwQ3GPS5/ceCyHdjXubwQWI12MKWSNSMYLJMq23/IUCvJMS76PDqXe1fxA=="],
 
-    "wrangler/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.24.2", "", { "os": "win32", "cpu": "x64" }, "sha512-7VTgWzgMGvup6aSqDPLiW5zHaxYJGTO4OokMjIlrCtf+VpEL+cXKtCvg723iguPYI5oaUNdS+/V7OU2gvXVWEg=="],
+    "wrangler/esbuild/@esbuild/win32-x64": ["@esbuild/win32-x64@0.24.2", "", { "os": "win32", "cpu": "x64" }, "sha512-7VTgWzgMGvup6aSqDPLiW5zHaxYJGTO4OokMjIlrCtf+VpEL+cXKtCvg723iguPYI5oaUNdS+/V7OU2gvXVWEg=="]
   }
 }

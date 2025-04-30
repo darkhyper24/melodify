@@ -1,9 +1,9 @@
-import { pgTable, text, timestamp, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, primaryKey } from 'drizzle-orm/pg-core';
 import { songs } from './song';
-import { playlists } from './playlist';
+import { playlist } from './playlist';
 
-export const playlistSongs = pgTable('playlist_songs', {
-  playlistId: text('playlist_id').notNull().references(() => playlists.id),
+export const playlistSongs = pgTable('playlist_song', {
+  playlistId: text('playlist_id').notNull().references(() => playlist.id),
   songId: text('song_id').notNull().references(() => songs.id),
 }, (table) => {
   return {

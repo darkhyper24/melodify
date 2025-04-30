@@ -7,6 +7,7 @@ import albumRouter from './routes/albumRoutes'
 import homeRoutes from './routes/homeRoutes'
 import songRoutes from './routes/songRoutes'
 import reviewRoutes from './routes/reviewRoutes'
+import playlistRouter from './routes/playlistRoutes'
 const app = new Hono()
 
 app.use('*', async (c, next) => {
@@ -36,4 +37,5 @@ app.route('/albums', albumRouter)
 app.route('/home', homeRoutes)
 app.route('/songs', songRoutes)
 app.route('/reviews', reviewRoutes)
+app.route('/playlists', playlistRouter)
 export default app
