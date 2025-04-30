@@ -931,6 +931,80 @@ paths:
         '500':
           description: Server error
 
+  /songs/{id}/like:
+    post:
+      tags: [songs]
+      summary: Like a song
+      description: Adds a song to the user's Liked Songs playlist. Creates the playlist if it doesn't exist.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the song to like
+      responses:
+        '201':
+          description: Song liked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Song liked successfully
+        '200':
+          description: Song already liked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Song already liked
+        '401':
+          description: Unauthorized - invalid or expired token
+        '404':
+          description: Song not found
+        '500':
+          description: Server error
+
+  /songs/{id}/unlike:
+    post:
+      tags: [songs]
+      summary: Unlike a song
+      description: Removes a song from the user's Liked Songs playlist. Deletes the playlist if it becomes empty.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the song to unlike
+      responses:
+        '200':
+          description: Song unliked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Song unliked successfully
+        '401':
+          description: Unauthorized - invalid or expired token
+        '404':
+          description: Liked Songs playlist not found
+        '500':
+          description: Server error
+
 components:
   schemas:
     Signup:
@@ -968,7 +1042,7 @@ components:
         email:
           type: string
           format: email
-          example: unminru@gmail.com
+          example: modamoda@gmail.com
   securitySchemes:
     bearerAuth:
       type: http

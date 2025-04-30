@@ -11,7 +11,9 @@ router.get('/album/:id', SongController.getAlbumSongs)
 router.patch('/:id', authMiddleware, SongController.updateSong)
 router.delete('/:id', authMiddleware, SongController.deleteSong)
 router.get('/:id', SongController.getSongBasicInfo)
-router.get('/playlist/:id', authMiddleware,SongController.getPlaylistSongs)
+router.get('/playlist/:id', authMiddleware, SongController.getPlaylistSongs)
 router.post('/playlist/:id/add', authMiddleware, SongController.addSongToPlaylist)
+router.post('/:id/like', authMiddleware, SongController.likeSong)
+router.post('/:id/unlike', authMiddleware, SongController.unlikeSong)
 
 export default router
