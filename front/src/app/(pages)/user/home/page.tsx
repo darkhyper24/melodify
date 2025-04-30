@@ -1,20 +1,28 @@
 "use client";
 
-import { BiHome, BiLibrary, BiSearch, BiPlus } from "react-icons/bi";
+import { BiHome, BiLibrary, BiSearch, BiPlus, BiEdit, BiMusic } from "react-icons/bi";
 import { RiPlayFill } from "react-icons/ri";
 import Link from "next/link";
-// import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAlbums, Album } from "@/api/artists";
 import { useState, useEffect } from "react";
+import { fetchUserPlaylists, Playlist } from "@/api/playlist";
+import CreatePlaylistModal from "@/components/CreatePlaylistModal";
 
 const Home = () => {
     const [hoveredAlbum, setHoveredAlbum] = useState<string | null>(null);
     const [albumData, setAlbumData] = useState<Album[]>([]);
+    const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false);
+    const [playlistToEdit, setPlaylistToEdit] = useState<{ id: string; name: string } | undefined>(undefined);
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ["albums"],
         queryFn: fetchAlbums,
+    });
+
+    const { data: playlistsData, isLoading: playlistsLoading } = useQuery({
+        queryKey: ["playlists"],
+        queryFn: fetchUserPlaylists,
     });
 
     useEffect(() => {
@@ -47,27 +55,66 @@ const Home = () => {
                             <BiLibrary className="text-2xl" />
                             <span>Your Library</span>
                         </div>
-                        <button className="bg-none border-none text-[#b3b3b3] text-2xl p-1 opacity-70 hover:opacity-100 hover:text-white">
+                        <button 
+                            className="bg-none border-none text-[#b3b3b3] text-2xl p-1 opacity-70 hover:opacity-100 hover:text-white"
+                            onClick={() => {
+                                setPlaylistToEdit(undefined);
+                                setIsCreatePlaylistModalOpen(true);
+                            }}
+                        >
                             <BiPlus />
                         </button>
                     </div>
 
-                    <div className="flex-1 flex flex-col gap-4 px-2">
-                        <div className="bg-[#242424] rounded-lg p-5">
-                            <h2 className="text-base mb-2">Create your first playlist</h2>
-                            <p className="text-[#b3b3b3] text-sm mb-5">It&apos;s easy, we&apos;ll help you</p>
-                            <button className="bg-white text-black font-bold text-sm px-8 py-3 rounded-full hover:scale-105 transition-transform">
-                                Create playlist
-                            </button>
-                        </div>
-
-                        <div className="bg-[#242424] rounded-lg p-5">
-                            <h2 className="text-base mb-2">Let&apos;s find some podcasts to follow</h2>
-                            <p className="text-[#b3b3b3] text-sm mb-5">We&apos;ll keep you updated on new episodes</p>
-                            <button className="bg-white text-black font-bold text-sm px-8 py-3 rounded-full hover:scale-105 transition-transform">
-                                Browse podcasts
-                            </button>
-                        </div>
+                    <div className="flex-1 flex flex-col gap-2 px-2">
+                        {playlistsLoading ? (
+                            <div className="p-4 text-[#b3b3b3]">Loading playlists...</div>
+                        ) : playlistsData?.data && playlistsData.data.length > 0 ? (
+                            // User has playlists
+                            playlistsData.data.map((playlist: Playlist) => (
+                                <Link 
+                                    key={playlist.id}
+                                    href={`/user/playlist/${playlist.id}`}
+                                    className="flex items-center justify-between group p-3 rounded-md hover:bg-[#2a2a2a]"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-[#333333] flex items-center justify-center rounded-md">
+                                            <BiMusic className="text-[#b3b3b3] text-xl" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-white">{playlist.name}</p>
+                                            <p className="text-sm text-[#b3b3b3]">Playlist • {playlist.profiles?.full_name}</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        className="opacity-0 group-hover:opacity-100 text-[#b3b3b3] hover:text-white p-2"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setPlaylistToEdit({
+                                                id: playlist.id,
+                                                name: playlist.name
+                                            });
+                                            setIsCreatePlaylistModalOpen(true);
+                                        }}
+                                    >
+                                        <BiEdit />
+                                    </button>
+                                </Link>
+                            ))
+                        ) : (
+                            // User has no playlists
+                            <div className="bg-[#242424] rounded-lg p-5">
+                                <h2 className="text-base mb-2">Create your first playlist</h2>
+                                <p className="text-[#b3b3b3] text-sm mb-5">It&apos;s easy, we&apos;ll help you</p>
+                                <button 
+                                    className="bg-white text-black font-bold text-sm px-8 py-3 rounded-full hover:scale-105 transition-transform"
+                                    onClick={() => setIsCreatePlaylistModalOpen(true)}
+                                >
+                                    Create playlist
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -220,6 +267,16 @@ const Home = () => {
                     })()}
                 </div>
             </main>
+
+            {/* Create Playlist Modal */}
+            <CreatePlaylistModal 
+                isOpen={isCreatePlaylistModalOpen} 
+                onClose={() => {
+                    setIsCreatePlaylistModalOpen(false);
+                    setPlaylistToEdit(undefined);
+                }}
+                playlistToEdit={playlistToEdit}
+            />
         </div>
     );
 };

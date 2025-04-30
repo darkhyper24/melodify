@@ -85,8 +85,12 @@ interface PlayerContextType {
     isMuted: boolean;
     showLyrics: boolean;
     currentLyricIndex: number;
+    queue: Song[];
     audioRef: React.RefObject<HTMLAudioElement | null>;
     playSong: (song: Song) => void;
+    playQueue: (songs: Song[], startIndex: number) => void;
+    playNext: () => void;
+    playPrevious: () => void;
     togglePlay: () => void;
     handleSeek: (newTime: number[]) => void;
     toggleMute: () => void;
@@ -94,8 +98,8 @@ interface PlayerContextType {
     toggleLyrics: () => void;
     formatTime: (time: number) => string;
     jumpToLyric: (index: number) => void;
-    playbackSpeed: number; // Add playbackSpeed to context
-    changePlaybackSpeed: (speed: number) => void; // Function to change playback speed
+    playbackSpeed: number;
+    changePlaybackSpeed: (speed: number) => void;
 }
 
 // Create the context
@@ -113,6 +117,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const [showLyrics, setShowLyrics] = useState(false);
     const [currentLyricIndex, setCurrentLyricIndex] = useState(-1);
     const [playbackSpeed, setPlaybackSpeed] = useState(1); // Default speed is 1x
+    const [queue, setQueue] = useState<Song[]>([]);
+    const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
 
     // References
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -133,6 +139,66 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             ...song,
             lyrics: Array.isArray(song.lyrics) ? song.lyrics : [],
         });
+        // Clear the queue when playing a single song
+        setQueue([]);
+        setCurrentQueueIndex(-1);
+        setIsPlaying(true);
+    };
+
+    // Play a queue of songs starting at a specific index
+    const playQueue = (songs: Song[], startIndex: number) => {
+        if (songs.length === 0 || startIndex < 0 || startIndex >= songs.length) {
+            return;
+        }
+        
+        const newSong = {
+            ...songs[startIndex],
+            lyrics: Array.isArray(songs[startIndex].lyrics) ? songs[startIndex].lyrics : [],
+        };
+        
+        setCurrentSong(newSong);
+        setQueue(songs);
+        setCurrentQueueIndex(startIndex);
+        setIsPlaying(true);
+    };
+
+    // Play the next song in the queue
+    const playNext = () => {
+        if (queue.length === 0 || currentQueueIndex === -1) {
+            return;
+        }
+        
+        // If at the end of the queue, loop back to the first song
+        const nextIndex = currentQueueIndex >= queue.length - 1 ? 0 : currentQueueIndex + 1;
+        const nextSong = {
+            ...queue[nextIndex],
+            lyrics: Array.isArray(queue[nextIndex].lyrics) ? queue[nextIndex].lyrics : [],
+        };
+        
+        setCurrentSong(nextSong);
+        setCurrentQueueIndex(nextIndex);
+        setIsPlaying(true);
+    };
+
+    // Play the previous song in the queue
+    const playPrevious = () => {
+        if (queue.length === 0 || currentQueueIndex <= 0) {
+            // If at the beginning of queue or no queue, restart current song
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                setCurrentTime(0);
+            }
+            return;
+        }
+        
+        const prevIndex = currentQueueIndex - 1;
+        const prevSong = {
+            ...queue[prevIndex],
+            lyrics: Array.isArray(queue[prevIndex].lyrics) ? queue[prevIndex].lyrics : [],
+        };
+        
+        setCurrentSong(prevSong);
+        setCurrentQueueIndex(prevIndex);
         setIsPlaying(true);
     };
 
@@ -303,6 +369,24 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         setPlaybackSpeed(speed);
     };
 
+    // Auto-play next song when current song ends
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleSongEnd = () => {
+            if (queue.length > 0 && currentQueueIndex >= 0) {
+                playNext(); // This will now loop back to the first song when at the end
+            }
+        };
+
+        audio.addEventListener('ended', handleSongEnd);
+        
+        return () => {
+            audio.removeEventListener('ended', handleSongEnd);
+        };
+    }, [queue, currentQueueIndex]);
+
     const value = {
         currentSong,
         isPlaying,
@@ -312,8 +396,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         isMuted,
         showLyrics,
         currentLyricIndex,
+        queue,
         audioRef,
         playSong,
+        playQueue,
+        playNext,
+        playPrevious,
         togglePlay,
         handleSeek,
         toggleMute,

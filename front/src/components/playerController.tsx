@@ -21,8 +21,11 @@ export function PlayerController() {
         isMuted,
         showLyrics,
         playbackSpeed,
+        queue,
         togglePlay,
         playSong,
+        playNext,
+        playPrevious,
         handleSeek,
         toggleMute,
         handleVolumeChange,
@@ -35,6 +38,7 @@ export function PlayerController() {
     const pathname = usePathname();
     const [redirectingToSongs, setRedirectingToSongs] = useState(false);
     const [songs, setSongs] = useState<Song[]>([]);
+    const [showPlayerController, setShowPlayerController] = useState(false);
 
     const { data, error } = useQuery({
         queryKey: ["albumDetails", currentSong?.album_id],
@@ -50,6 +54,7 @@ export function PlayerController() {
             setSongs(data.songs);
         }
     }, [data]);
+
     // Ensure lyrics are toggled off when navigating away from /songs
     useEffect(() => {
         if (pathname !== "/songs" && showLyrics) {
@@ -65,8 +70,6 @@ export function PlayerController() {
         }
     }, [pathname, redirectingToSongs, toggleLyrics]);
 
-    const [showPlayerController, setShowPlayerController] = useState(false);
-
     useEffect(() => {
         if (typeof window !== "undefined") {
             const userRole = localStorage.getItem("userRole");
@@ -74,32 +77,24 @@ export function PlayerController() {
         }
     }, []);
 
-    const handleSkip = useCallback(
-        debounce((step: number) => {
-            if (!songs || !currentSong) return;
-
-            const currentIndex = songs.findIndex((song) => song.id === currentSong.id);
-
-            if (currentIndex !== -1) {
-                const nextIndex = (currentIndex + step + songs.length) % songs.length;
-                const nextSong = songs[nextIndex];
-
-                playSong({ ...nextSong, album_id: currentSong.album_id });
-            }
-        }, 300), // 300ms debounce
-        [songs, currentSong, playSong]
+    const debouncedSeek = useCallback(
+        debounce((newTime: number[]) => {
+            handleSeek(newTime);
+        }, 50),
+        [handleSeek]
     );
 
     // Don't render if no song is selected
     if (!currentSong) return null;
 
     if (!showPlayerController) return null; // Don't render if userRole is not "user"
+
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-[#121212] p-4 z-50">
             <div className="max-w-[95rem] mx-auto">
                 {/* Progress bar */}
                 <div className="mb-2">
-                    <Slider value={[currentTime]} max={duration || 100} step={1} onValueChange={handleSeek} className="w-full" />
+                    <Slider value={[currentTime]} max={duration || 100} step={1} onValueChange={debouncedSeek} className="w-full" />
                     <div className="flex justify-between text-xs text-gray-400 mt-3">
                         <span>{formatTime(currentTime)}</span>
                         <span>{formatTime(duration)}</span>
@@ -125,7 +120,7 @@ export function PlayerController() {
 
                     {/* Playback controls */}
                     <div className="flex items-center justify-center gap-4">
-                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white" onClick={() => handleSkip(-1)}>
+                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white" onClick={playPrevious}>
                             <SkipBack className="h-5 w-5" />
                         </Button>
 
@@ -138,7 +133,7 @@ export function PlayerController() {
                             {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
                         </Button>
 
-                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white" onClick={() => handleSkip(1)}>
+                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white" onClick={playNext}>
                             <SkipForward className="h-5 w-5" />
                         </Button>
                     </div>
