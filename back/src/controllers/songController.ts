@@ -679,3 +679,161 @@ export const addSongToPlaylist = async (c: Context) => {
     }
 
 }
+
+// Like a song (adds to Liked Songs playlist)
+export const likeSong = async (c: Context) => {
+    try {
+        const user = c.get("user");
+        const songId = c.req.param("id");
+
+        if (!user) {
+            return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        if (!songId) {
+            return c.json({ error: "Song ID is required" }, 400);
+        }
+
+        // Check if song exists
+        const { data: song, error: songError } = await supabase
+            .from("song")
+            .select("id")
+            .eq("id", songId)
+            .single();
+
+        if (songError || !song) {
+            return c.json({ error: "Song not found" }, 404);
+        }
+
+        // Get or create Liked Songs playlist
+        const { data: likedPlaylist, error: playlistError } = await supabase
+            .from("Playlist")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("name", "Liked Songs")
+            .single();
+
+        let playlistId;
+
+        if (!likedPlaylist) {
+            // Create Liked Songs playlist if it doesn't exist
+            const { data: newPlaylist, error: createError } = await supabase
+                .from("Playlist")
+                .insert({
+                    id: crypto.randomUUID(),
+                    name: "Liked Songs",
+                    user_id: user.id
+                })
+                .select("id")
+                .single();
+
+            if (createError) {
+                console.error("Error creating Liked Songs playlist:", createError);
+                return c.json({ error: "Failed to create Liked Songs playlist" }, 500);
+            }
+
+            playlistId = newPlaylist.id;
+        } else {
+            playlistId = likedPlaylist.id;
+        }
+
+        // Check if song is already in playlist
+        const { data: existingSong, error: existingError } = await supabase
+            .from("playlist_song")
+            .select("*")
+            .eq("playlist_id", playlistId)
+            .eq("song_id", songId)
+            .single();
+
+        if (existingSong) {
+            return c.json({ message: "Song already liked" }, 200);
+        }
+
+        // Add song to playlist
+        const { error: insertError } = await supabase
+            .from("playlist_song")
+            .insert({
+                playlist_id: playlistId,
+                song_id: songId,
+            });
+
+        if (insertError) {
+            console.error("Error adding song to Liked Songs:", insertError);
+            return c.json({ error: "Failed to like song" }, 500);
+        }
+
+        return c.json({ message: "Song liked successfully" }, 201);
+    } catch (error) {
+        console.error("Unexpected error in likeSong:", error);
+        return c.json({ error: "Server error liking song" }, 500);
+    }
+};
+
+// Unlike a song (removes from Liked Songs playlist)
+export const unlikeSong = async (c: Context) => {
+    try {
+        const user = c.get("user");
+        const songId = c.req.param("id");
+
+        if (!user) {
+            return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        if (!songId) {
+            return c.json({ error: "Song ID is required" }, 400);
+        }
+
+        // Get Liked Songs playlist
+        const { data: likedPlaylist, error: playlistError } = await supabase
+            .from("Playlist")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("name", "Liked Songs")
+            .single();
+
+        if (playlistError || !likedPlaylist) {
+            return c.json({ error: "Liked Songs playlist not found" }, 404);
+        }
+
+        // Remove song from playlist
+        const { error: deleteError } = await supabase
+            .from("playlist_song")
+            .delete()
+            .eq("playlist_id", likedPlaylist.id)
+            .eq("song_id", songId);
+
+        if (deleteError) {
+            console.error("Error removing song from Liked Songs:", deleteError);
+            return c.json({ error: "Failed to unlike song" }, 500);
+        }
+
+        // Check if playlist is now empty
+        const { data: remainingSongs, error: countError } = await supabase
+            .from("playlist_song")
+            .select("song_id")
+            .eq("playlist_id", likedPlaylist.id);
+
+        if (countError) {
+            console.error("Error checking remaining songs:", countError);
+            return c.json({ error: "Failed to check remaining songs" }, 500);
+        }
+
+        // If no songs left, delete the playlist
+        if (remainingSongs.length === 0) {
+            const { error: deletePlaylistError } = await supabase
+                .from("Playlist")
+                .delete()
+                .eq("id", likedPlaylist.id);
+
+            if (deletePlaylistError) {
+                console.error("Error deleting empty Liked Songs playlist:", deletePlaylistError);
+                return c.json({ error: "Failed to delete empty playlist" }, 500);
+            }
+        }
+
+        return c.json({ message: "Song unliked successfully" }, 200);
+    } catch (error) {
+        console.error("Unexpected error in unlikeSong:", error);
+        return c.json({ error: "Server error unliking song" }, 500);
+    }
+};
