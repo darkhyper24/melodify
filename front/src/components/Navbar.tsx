@@ -4,11 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import ProfileDropdown from "./ProfileDropdown";
+import { useSearch } from "@/hooks/useSearch";
 
 const Navbar = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    // Use the custom search hook
+    const { searchQuery, handleSearchChange, handleSearchSubmit } = useSearch();
 
     useEffect(() => {
         const checkAuth = () => {
@@ -60,6 +63,8 @@ const Navbar = () => {
         }
     };
 
+    // Search logic has been moved to the useSearch hook
+
     return (
         <nav className="bg-black/90 sticky w-full top-0 right-0 py-4 z-40">
             <div className="flex items-center w-full px-8 box-border max-md:px-4">
@@ -86,11 +91,15 @@ const Navbar = () => {
                 )}
 
                 <div className="absolute left-1/2 transform -translate-x-1/2 w-full max-w-xl flex justify-center">
-                    <input
-                        type="text"
-                        placeholder="What do you want to listen to?"
-                        className="w-full px-8 py-4 rounded-full bg-[#242424] text-white text-sm font-normal placeholder-[#909090] outline-none focus:bg-[#2a2a2a] transition-all duration-200"
-                    />
+                    <form onSubmit={handleSearchSubmit} className="w-full">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            placeholder="What do you want to listen to?"
+                            className="w-full px-8 py-4 rounded-full bg-[#242424] text-white text-sm font-normal placeholder-[#909090] outline-none focus:bg-[#2a2a2a] transition-all duration-200"
+                        />
+                    </form>
                 </div>
 
                 <div className="flex items-center gap-2 max-md:gap-4">
