@@ -24,25 +24,42 @@ export default function StarRating({ songId, initialRating = 0 }: StarRatingProp
     const fetchReviewData = async () => {
         try {
             const response = await getReviews(songId);
-            const userId = localStorage.getItem('userId');
             
-            if (userId && response.reviews) {
-                const userReview = response.reviews.find(
-                    (review) => review.user_id === userId
-                );
-                
-                if (userReview) {
-                    setRating(userReview.rating);
-                    setHasUserReview(true);
-                } else {
-                    setRating(0);
-                    setHasUserReview(false);
-                }
-            }
-
+            // Always update statistics for all users
             if (response.statistics) {
                 setAverageRating(response.statistics.average_rating);
                 setReviewCount(response.statistics.review_count);
+            }
+
+            // Only check for user's review if authenticated
+            if (isAuthenticated) {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.log("No token found");
+                    return;
+                }
+                
+                // Decode the JWT token to get user ID
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userId = payload.sub;
+                
+                if (userId && response.reviews) {
+                    const userReview = response.reviews.find(
+                        (review) => review.user_id === userId
+                    );
+                    
+                    if (userReview) {
+                        setRating(userReview.rating);
+                        setHasUserReview(true);
+                    } else {
+                        setRating(0);
+                        setHasUserReview(false);
+                    }
+                }
+            } else {
+                // Reset user-specific state if not authenticated
+                setRating(0);
+                setHasUserReview(false);
             }
         } catch (error) {
             console.error('Error fetching reviews:', error);

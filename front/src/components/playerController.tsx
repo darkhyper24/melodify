@@ -100,8 +100,8 @@ export function PlayerController() {
                 });
                 
                 if (response.ok) {
-                    const data = await response.json();
-                    const likedPlaylist = data.playlists.find((p: any) => p.name === "Liked Songs");
+                    const playlists = await response.json();
+                    const likedPlaylist = playlists.data.find((p: any) => p.name === "Liked Songs");
                     
                     if (likedPlaylist) {
                         // Check if the current song is in the Liked Songs playlist
@@ -137,15 +137,12 @@ export function PlayerController() {
             if (isLiked) {
                 await unlikeSong(currentSong.id);
                 setIsLiked(false);
-                alert("Removed from Liked Songs");
             } else {
                 await likeSong(currentSong.id);
                 setIsLiked(true);
-                alert("Added to Liked Songs");
             }
         } catch (error) {
             console.error('Error toggling like:', error);
-            alert("Failed to update like status");
         } finally {
             setIsLiking(false);
         }
