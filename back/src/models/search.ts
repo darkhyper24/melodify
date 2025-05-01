@@ -37,17 +37,6 @@ export type ArtistSearchResult = {
     bio: string | null;
 };
 
-export type PlaylistSearchResult = {
-    id: string;
-    name: string;
-    createdAt: string;
-    userId: string;
-    owner: {
-        fullName: string;
-    } | null;
-    songCount?: number;
-};
-
 export type SearchResponse = {
     query: string;
     count: number;
@@ -64,10 +53,4 @@ export type ArtistSearchResponse = {
     query: string;
     count: number;
     artists: ArtistSearchResult[];
-};
-
-export type PlaylistSearchResponse = {
-    query: string;
-    count: number;
-    playlists: PlaylistSearchResult[];
 };

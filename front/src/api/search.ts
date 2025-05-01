@@ -39,17 +39,6 @@ export interface ArtistSearchResult {
   bio: string | null;
 }
 
-export interface PlaylistSearchResult {
-  id: string;
-  name: string;
-  createdAt: string;
-  userId: string;
-  owner: {
-    fullName: string;
-  } | null;
-  songCount?: number;
-}
-
 export interface SearchResponse {
   songs: SongSearchResult[];
 }
@@ -60,10 +49,6 @@ export interface AlbumSearchResponse {
 
 export interface ArtistSearchResponse {
   artists: ArtistSearchResult[];
-}
-
-export interface PlaylistSearchResponse {
-  playlists: PlaylistSearchResult[];
 }
 
 export const searchSongs = async (query: string): Promise<Song[]> => {
@@ -85,7 +70,7 @@ export const searchSongs = async (query: string): Promise<Song[]> => {
       artist: song.profiles?.fullName ?? 'Unknown Artist',
       album: song.album?.name ?? 'Unknown Album',
       album_id: song.albumId,
-      cover: song.album?.albumPic ?? '/placeholder.svg',
+      cover: song.cover || song.album?.albumPic || '/placeholder.svg',
       songUrl: song.songUrl,
       lyrics: [],
     }));
@@ -131,26 +116,6 @@ export const searchArtists = async (query: string): Promise<ArtistSearchResult[]
     return response.data.artists;
   } catch (error) {
     console.error('Error searching artists:', error);
-    return [];
-  }
-};
-
-export const searchPlaylists = async (query: string): Promise<PlaylistSearchResult[]> => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axios.get<PlaylistSearchResponse>(`http://localhost:8787/search/playlists?q=${encodeURIComponent(query)}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data.playlists;
-  } catch (error) {
-    console.error('Error searching playlists:', error);
     return [];
   }
 };

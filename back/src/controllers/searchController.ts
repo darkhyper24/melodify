@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { supabase } from "../supabase/supabase";
-import { SearchResponse, AlbumSearchResponse, ArtistSearchResponse, PlaylistSearchResponse } from "../models/search";
+import { SearchResponse, AlbumSearchResponse, ArtistSearchResponse } from "../models/search";
 
 type DbSong = {
     id: string;
@@ -36,16 +36,6 @@ type DbArtist = {
     avatar_url: string | null;
     role: string;
     bio: string | null;
-};
-
-type DbPlaylist = {
-    id: string;
-    name: string;
-    created_at: string;
-    user_id: string;
-    profiles?: {
-        full_name: string;
-    } | null;
 };
 
 export const searchSongs = async (c: Context) => {
@@ -297,84 +287,5 @@ export const searchArtists = async (c: Context) => {
     } catch (error: unknown) {
         console.error("Unexpected error in searchArtists:", error);
         return c.json({ error: "Server error searching artists" }, 500);
-    }
-};
-
-export const searchPlaylists = async (c: Context) => {
-    try {
-        // Get search query from URL parameters
-        const query = c.req.query("q");
-        const limit = parseInt(c.req.query("limit") ?? "20");
-        const offset = parseInt(c.req.query("offset") ?? "0");
-        
-        if (!query) {
-            return c.json({ error: "Search query is required" }, 400);
-        }
-
-        // Normalize the search query for better matching
-        const normalizedQuery = query.toLowerCase().trim();
-        
-        // Search playlists by name
-        const { data: playlists, error } = await supabase
-            .from("playlists")
-            .select(`
-                id,
-                name,
-                created_at,
-                user_id,
-                profiles (
-                    id,
-                    full_name
-                )
-            `)
-            .ilike('name', `%${normalizedQuery}%`)
-            .order("created_at", { ascending: false })
-            .range(offset, offset + limit - 1);
-
-        if (error) {
-            console.error("Error searching playlists:", error);
-            return c.json({ error: "Failed to search playlists" }, 500);
-        }
-
-        // Get song count for each playlist
-        const playlistIds = playlists?.map((playlist: DbPlaylist) => playlist.id) || [];
-        let songCounts: Record<string, number> = {};
-        
-        if (playlistIds.length > 0) {
-            const { data: playlistSongsData, error: playlistSongsError } = await supabase
-                .from("playlist_songs")
-                .select('playlist_id')
-                .in('playlist_id', playlistIds);
-                
-            if (!playlistSongsError && playlistSongsData) {
-                // Count songs per playlist
-                songCounts = playlistSongsData.reduce((acc: Record<string, number>, item: { playlist_id: string }) => {
-                    const playlistId = item.playlist_id;
-                    acc[playlistId] = (acc[playlistId] || 0) + 1;
-                    return acc;
-                }, {});
-            }
-        }
-
-        // Format the response
-        const response: PlaylistSearchResponse = {
-            query: query,
-            count: playlists?.length || 0,
-            playlists: (playlists || []).map((playlist: DbPlaylist) => ({
-                id: playlist.id,
-                name: playlist.name,
-                createdAt: playlist.created_at,
-                userId: playlist.user_id,
-                owner: playlist.profiles ? {
-                    fullName: playlist.profiles.full_name
-                } : null,
-                songCount: songCounts[playlist.id] || 0
-            }))
-        };
-
-        return c.json(response, 200);
-    } catch (error: unknown) {
-        console.error("Unexpected error in searchPlaylists:", error);
-        return c.json({ error: "Server error searching playlists" }, 500);
     }
 };

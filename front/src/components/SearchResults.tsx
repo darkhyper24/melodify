@@ -1,31 +1,11 @@
 import { useEffect, useState } from "react";
-import { searchSongs, searchAlbums, searchArtists, searchPlaylists } from "@/api/search";
+import { searchSongs, searchAlbums, searchArtists } from "@/api/search";
 import { Song, usePlayer } from "@/providers/PlayerProvider";
-import { AlbumSearchResult, ArtistSearchResult, PlaylistSearchResult } from "@/api/search";
+import { AlbumSearchResult, ArtistSearchResult } from "@/api/search";
 import dynamic from "next/dynamic";
 import { Play, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { fetchAlbumSongs } from "@/api/albumDetails";
-
-const SongCard = dynamic(() => import("./SongCard"), {
-  ssr: false,
-  loading: () => <div className="bg-[#181818] p-3 rounded-md aspect-square animate-pulse"></div>
-});
-
-const AlbumCard = dynamic(() => import("./AlbumCard"), {
-  ssr: false,
-  loading: () => <div className="bg-[#181818] p-3 rounded-md aspect-square animate-pulse"></div>
-});
-
-const ArtistCard = dynamic(() => import("./ArtistCard"), {
-  ssr: false,
-  loading: () => <div className="bg-[#181818] p-3 rounded-md aspect-square animate-pulse"></div>
-});
-
-const PlaylistCard = dynamic(() => import("./PlaylistCard"), {
-  ssr: false,
-  loading: () => <div className="bg-[#181818] p-3 rounded-md aspect-square animate-pulse"></div>
-});
 
 const SongRow = dynamic(() => import("./SongRow"), {
   ssr: false,
@@ -41,7 +21,6 @@ const SearchResults = ({ query, showTopResult = true }: SearchResultsProps) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [albums, setAlbums] = useState<AlbumSearchResult[]>([]);
   const [artists, setArtists] = useState<ArtistSearchResult[]>([]);
-  const [playlists, setPlaylists] = useState<PlaylistSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [showAllArtists, setShowAllArtists] = useState(false);
@@ -54,23 +33,20 @@ const SearchResults = ({ query, showTopResult = true }: SearchResultsProps) => {
       setSongs([]);
       setAlbums([]);
       setArtists([]);
-      setPlaylists([]);
       return;
     }
 
     setIsLoading(true);
     try {
-      const [songsResults, albumsResults, artistsResults, playlistsResults] = await Promise.all([
+      const [songsResults, albumsResults, artistsResults] = await Promise.all([
         searchSongs(searchQuery),
         searchAlbums(searchQuery),
-        searchArtists(searchQuery),
-        searchPlaylists(searchQuery)
+        searchArtists(searchQuery)
       ]);
       
       setSongs(songsResults);
       setAlbums(albumsResults);
       setArtists(artistsResults);
-      setPlaylists(playlistsResults);
     } catch (error) {
       console.error("Error searching:", error);
     } finally {
@@ -84,7 +60,7 @@ const SearchResults = ({ query, showTopResult = true }: SearchResultsProps) => {
     }
   }, [query]);
 
-  const hasResults = songs.length > 0 || albums.length > 0 || artists.length > 0 || playlists.length > 0;
+  const hasResults = songs.length > 0 || albums.length > 0 || artists.length > 0;
   const displayedSongs = showAllSongs ? songs : songs.slice(0, 4);
   const displayedArtists = showAllArtists ? artists : artists.slice(0, 7);
   const displayedAlbums = showAllAlbums ? albums : albums.slice(0, 7);
@@ -197,28 +173,6 @@ const SearchResults = ({ query, showTopResult = true }: SearchResultsProps) => {
                         >
                           <Play className="h-6 w-6 fill-black" />
                         </button>
-                      </div>
-                    ) : playlists.length > 0 ? (
-                      <div className="h-full flex flex-col">
-                        <div className="mb-3">
-                          <div className="w-[150px] h-[150px] rounded-md overflow-hidden">
-                            <div className="w-full h-full bg-gradient-to-br from-[#404040] to-[#282828] flex items-center justify-center">
-                              <span className="text-3xl font-bold text-white/70">{playlists[0].name.charAt(0)}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mb-12">
-                          <h3 className="text-2xl font-bold mb-1 line-clamp-1">{playlists[0].name}</h3>
-                          <p className="text-sm text-[#b3b3b3] line-clamp-1">
-                            Playlist • {playlists[0].owner?.fullName || "Unknown"}
-                          </p>
-                        </div>
-                        <Link 
-                          href={`/user/playlist/${playlists[0].id}`}
-                          className="absolute bottom-5 right-5 bg-[#1ed760] hover:bg-[#1fdf64] text-black rounded-full p-3 font-bold text-sm transition-all duration-200"
-                        >
-                          <Play className="h-6 w-6 fill-black" />
-                        </Link>
                       </div>
                     ) : null}
                   </div>
@@ -356,33 +310,6 @@ const SearchResults = ({ query, showTopResult = true }: SearchResultsProps) => {
                       <h3 className="text-sm font-bold truncate">{album.name}</h3>
                       <p className="text-xs text-[#b3b3b3] truncate">
                         {album.artist?.fullName || "Unknown Artist"}
-                      </p>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Playlists section - smaller cards in a row */}
-          {playlists.length > 0 && (
-            <div>
-              <h2 className="text-white text-xl font-bold mb-4">Playlists</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-4">
-                {playlists.slice(0, 7).map((playlist) => (
-                  <div key={playlist.id} className="w-full max-w-[180px]">
-                    <Link 
-                      href={`/user/playlist/${playlist.id}`}
-                      className="bg-transparent p-4 hover:bg-[#232323] rounded-md transition-all duration-300 flex flex-col h-full"
-                    >
-                      <div className="w-full aspect-square rounded-md overflow-hidden mb-3 max-w-[150px]">
-                        <div className="w-full h-full bg-gradient-to-br from-[#404040] to-[#282828] flex items-center justify-center">
-                          <span className="text-3xl font-bold text-white/70">{playlist.name.charAt(0)}</span>
-                        </div>
-                      </div>
-                      <h3 className="text-sm font-bold truncate">{playlist.name}</h3>
-                      <p className="text-xs text-[#b3b3b3] truncate">
-                        By {playlist.owner?.fullName || "Unknown"}
                       </p>
                     </Link>
                   </div>
