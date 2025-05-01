@@ -10,6 +10,7 @@ import { usePlayer } from "@/providers/PlayerProvider";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAlbumSongs, Song } from "@/api/albumDetails";
 import { debounce } from "@/lib/utils";
+import { likeSong, unlikeSong } from "@/api/songs";
 
 export function PlayerController() {
     const {
@@ -39,6 +40,8 @@ export function PlayerController() {
     const [redirectingToSongs, setRedirectingToSongs] = useState(false);
     const [songs, setSongs] = useState<Song[]>([]);
     const [showPlayerController, setShowPlayerController] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [isLiking, setIsLiking] = useState(false);
 
     const { data, error } = useQuery({
         queryKey: ["albumDetails", currentSong?.album_id],
@@ -76,6 +79,77 @@ export function PlayerController() {
             setShowPlayerController(userRole === "user");
         }
     }, []);
+
+    // Check if current song is liked
+    useEffect(() => {
+        const checkIfLiked = async () => {
+            if (!currentSong?.id) return;
+            
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setIsLiked(false);
+                    return;
+                }
+
+                // Get the Liked Songs playlist
+                const response = await fetch(`http://localhost:8787/playlists`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const likedPlaylist = data.playlists.find((p: any) => p.name === "Liked Songs");
+                    
+                    if (likedPlaylist) {
+                        // Check if the current song is in the Liked Songs playlist
+                        const songsResponse = await fetch(`http://localhost:8787/songs/playlist/${likedPlaylist.id}`, {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        });
+                        
+                        if (songsResponse.ok) {
+                            const songsData = await songsResponse.json();
+                            const isSongLiked = songsData.songs.some((song: any) => song.id === currentSong.id);
+                            setIsLiked(isSongLiked);
+                        }
+                    } else {
+                        setIsLiked(false);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking if song is liked:', error);
+                setIsLiked(false);
+            }
+        };
+
+        checkIfLiked();
+    }, [currentSong?.id]);
+
+    const handleLikeToggle = async () => {
+        if (!currentSong?.id || isLiking) return;
+
+        setIsLiking(true);
+        try {
+            if (isLiked) {
+                await unlikeSong(currentSong.id);
+                setIsLiked(false);
+                alert("Removed from Liked Songs");
+            } else {
+                await likeSong(currentSong.id);
+                setIsLiked(true);
+                alert("Added to Liked Songs");
+            }
+        } catch (error) {
+            console.error('Error toggling like:', error);
+            alert("Failed to update like status");
+        } finally {
+            setIsLiking(false);
+        }
+    };
 
     const debouncedSeek = useCallback(
         debounce((newTime: number[]) => {
@@ -158,8 +232,14 @@ export function PlayerController() {
                         >
                             <MicVocal className={`h-5 w-5 ${showLyrics ? "text-white" : "text-gray-400"}`} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hidden sm:flex">
-                            <Heart className="h-5 w-5" />
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className={`text-gray-400 hover:text-white hidden sm:flex ${isLiked ? "text-red-500" : ""}`}
+                            onClick={handleLikeToggle}
+                            disabled={isLiking}
+                        >
+                            <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
                         </Button>
                         <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white" onClick={toggleMute}>

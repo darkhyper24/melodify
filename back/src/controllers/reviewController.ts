@@ -89,8 +89,6 @@ const updateSongStatistics = async (songId: string) => {
     .eq('id', songId);
 };
 
-
-
 export const getReviews = async (c: Context) => {
   try {
     const songId = c.req.param('song_id');
@@ -108,7 +106,19 @@ export const getReviews = async (c: Context) => {
 
     if (error) throw error;
 
-    return c.json({ reviews });
+    // Calculate statistics
+    const reviewCount = reviews?.length || 0;
+    const averageRating = reviews?.length 
+      ? reviews.reduce((acc: number, curr: { rating: number }) => acc + curr.rating, 0) / reviewCount 
+      : 0;
+
+    return c.json({ 
+      reviews,
+      statistics: {
+        average_rating: Number(averageRating.toFixed(1)),
+        review_count: reviewCount
+      }
+    });
   } catch (error) {
     console.error('Get reviews error:', error);
     return c.json({ error: 'Failed to fetch reviews' }, 500);
