@@ -7,6 +7,7 @@ import Link from "next/link";
 import { BiArrowBack, BiPlay, BiPause, BiTime } from "react-icons/bi";
 import { usePlayer } from "@/providers/PlayerProvider";
 import { fetchPlaylistSongs } from "@/api/playlist";
+import StarRating from "@/components/StarRating";
 
 export default function PlaylistPage() {
   const params = useParams();
@@ -269,6 +270,7 @@ export default function PlaylistPage() {
                       <div className="text-sm text-[#b3b3b3] truncate">
                         {song.artist}
                       </div>
+                      <StarRating songId={song.id} />
                     </div>
                   </div>
                   <div className="flex items-center text-[#b3b3b3] truncate">

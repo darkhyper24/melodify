@@ -746,7 +746,7 @@ export const likeSong = async (c: Context) => {
             .single();
 
         if (existingSong) {
-            return c.json({ message: "Song already liked" }, 200);
+            return c.json({ message: "You already liked this song" }, 200);
         }
 
         // Add song to playlist
@@ -762,14 +762,13 @@ export const likeSong = async (c: Context) => {
             return c.json({ error: "Failed to like song" }, 500);
         }
 
-        return c.json({ message: "Song liked successfully" }, 201);
+        return c.json({ message: "Song added to Liked Songs" }, 201);
     } catch (error) {
         console.error("Unexpected error in likeSong:", error);
         return c.json({ error: "Server error liking song" }, 500);
     }
 };
 
-// Unlike a song (removes from Liked Songs playlist)
 export const unlikeSong = async (c: Context) => {
     try {
         const user = c.get("user");
@@ -831,7 +830,7 @@ export const unlikeSong = async (c: Context) => {
             }
         }
 
-        return c.json({ message: "Song unliked successfully" }, 200);
+        return c.json({ message: "You don't like this song anymore :(" }, 200);
     } catch (error) {
         console.error("Unexpected error in unlikeSong:", error);
         return c.json({ error: "Server error unliking song" }, 500);

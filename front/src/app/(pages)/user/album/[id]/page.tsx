@@ -8,6 +8,7 @@ import { BiMusic, BiArrowBack, BiPause, BiPlay, BiPlus } from "react-icons/bi";
 import { MdMusicNote } from "react-icons/md";
 import { usePlayer } from "@/providers/PlayerProvider";
 import AddToPlaylistModal from "@/components/AddToPlaylistModal";
+import StarRating from "@/components/StarRating";
 
 export default function AlbumPage() {
     const params = useParams();
@@ -232,6 +233,7 @@ export default function AlbumPage() {
                                         </div>
                                         <div>
                                             <p className="font-medium">{song.title}</p>
+                                            <StarRating songId={song.id} />
                                         </div>
                                     </div>
                                     <div className="text-[#b3b3b3]">{song.category || "-"}</div>
