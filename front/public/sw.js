@@ -10,12 +10,7 @@ const ASSETS_TO_CACHE = [
   '/logo.png',
 ];
 
-const DATA_ENDPOINTS = [
-  '/home',
-  '/songs',
-  '/playlists',
-  '/albums'
-];
+
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing.');
   self.skipWaiting();
@@ -46,28 +41,10 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   console.log('Fetching:', request.url);
 
-  // Handle direct endpoint requests (home, songs, etc)
-  if (DATA_ENDPOINTS.includes(url.pathname)) {
-    console.log('Handling data endpoint:', url.pathname);
-    event.respondWith(
-      caches.open(DATA_CACHE_NAME).then((cache) => {
-        return fetch(request)
-          .then((networkResponse) => {
-            console.log('Caching response for:', url.pathname);
-            cache.put(request, networkResponse.clone());
-            return networkResponse;
-          })
-          .catch((error) => {
-            console.log('Fetching from cache:', url.pathname);
-            return cache.match(request);
-          });
-      })
-    );
-    return;
-  }
+ 
   
   // Handle music file requests
-  if (url.pathname.includes('/songs/') || url.pathname.includes('/albums/')|| url.pathname.includes('/album/')) {
+  if ( url.pathname.includes('')) {
     event.respondWith(
       caches.open(MUSIC_CACHE_NAME).then((cache) => {
         return cache.match(request).then((response) => {
