@@ -448,13 +448,20 @@ paths:
           description: Server error
 
 
-  /songs/create:
+  /songs/create/{album_id}:
     post:
       tags: [songs]
       summary: Create new song
-      description: Creates a new song in the user's most recent album (requires artist role)
+      description: Creates a new song in artist desired album (requires artist role)
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: album_id
+          required: true
+          schema:
+            type: string
+          description: ID of the album to add the song to
       requestBody:
         required: true
         content:
@@ -515,7 +522,7 @@ paths:
         '403':
           description: Forbidden - user is not an artist
         '404':
-          description: No album found for the user
+          description: No album found for the artist
         '500':
           description: Server error
   /songs:
@@ -706,6 +713,298 @@ paths:
           description: Song not found
         '500':
           description: Server error
+
+  /reviews/{songId}:
+    post:
+      tags: [reviews]
+      summary: Create or update review
+      description: Creates a new review or updates existing one for a song (1 review per user per song)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: songId
+          required: true
+          schema:
+            type: string
+          description: ID of the song to review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+      responses:
+        '201':
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  review:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      rating:
+                        type: integer
+                      song_id:
+                        type: string
+                      user_id:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid rating value
+        '401':
+          description: Unauthorized - invalid token
+        '403':
+          description: Forbidden - artist cannot review own song
+        '404':
+          description: Song not found
+        '500':
+          description: Server error
+
+    get:
+      tags: [reviews]
+      summary: Get song reviews
+      description: Retrieves all reviews for a specific song
+      parameters:
+        - in: path
+          name: songId
+          required: true
+          schema:
+            type: string
+          description: ID of the song to get reviews for
+      responses:
+        '200':
+          description: Successfully retrieved reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        rating:
+                          type: integer
+                        user:
+                          type: object
+                          properties:
+                            full_name:
+                              type: string
+                            avatar_url:
+                              type: string
+                              nullable: true
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                  statistics:
+                    type: object
+                    properties:
+                      average_rating:
+                        type: number
+                        format: float
+                        example: 4.5
+                      review_count:
+                        type: integer
+                        example: 10
+        '404':
+          description: Song not found
+        '500':
+          description: Server error
+  
+    patch:
+      tags: [reviews]
+      summary: Update review
+      description: Updates an existing review for a song
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: songId
+          required: true
+          schema:
+            type: string
+          description: ID of the song
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+
+      responses:
+        '200':
+          description: Review updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        rating:
+                          type: integer
+                        user:
+                          type: object
+                          properties:
+                            full_name:
+                              type: string
+                            avatar_url:
+                              type: string
+                              nullable: true
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                  statistics:
+                    type: object
+                    properties:
+                      average_rating:
+                        type: number
+                        format: float
+                        example: 4.5
+                      review_count:
+                        type: integer
+                        example: 10
+              
+        '401':
+          description: Unauthorized - invalid token
+        '404':
+          description: Review not found
+        '500':
+          description: Server error
+
+    delete:
+      tags: [reviews]
+      summary: Delete review
+      description: Deletes a user's review for a song
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: songId
+          required: true
+          schema:
+            type: string
+          description: ID of the song
+      responses:
+        '204':
+          description: Review deleted successfully
+        '401':
+          description: Unauthorized - invalid token
+        '404':
+          description: Review not found
+        '500':
+          description: Server error
+
+  /songs/{id}/like:
+    post:
+      tags: [songs]
+      summary: Like a song
+      description: Adds a song to the user's Liked Songs playlist. Creates the playlist if it doesn't exist.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the song to like
+      responses:
+        '201':
+          description: Song liked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Song liked successfully
+        '200':
+          description: Song already liked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Song already liked
+        '401':
+          description: Unauthorized - invalid or expired token
+        '404':
+          description: Song not found
+        '500':
+          description: Server error
+
+  /songs/{id}/unlike:
+    post:
+      tags: [songs]
+      summary: Unlike a song
+      description: Removes a song from the user's Liked Songs playlist. Deletes the playlist if it becomes empty.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the song to unlike
+      responses:
+        '200':
+          description: Song unliked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Song unliked successfully
+        '401':
+          description: Unauthorized - invalid or expired token
+        '404':
+          description: Liked Songs playlist not found
+        '500':
+          description: Server error
+
 components:
   schemas:
     Signup:
@@ -725,7 +1024,7 @@ components:
         email:
           type: string
           format: email
-          example: unminru@gmail.com
+          example: modamoda@gmail.com
         role:
           type: string
           example: artist
@@ -743,7 +1042,7 @@ components:
         email:
           type: string
           format: email
-          example: unminru@gmail.com
+          example: modamoda@gmail.com
   securitySchemes:
     bearerAuth:
       type: http
