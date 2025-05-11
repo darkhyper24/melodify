@@ -36,15 +36,7 @@ export interface UploadAvatarResponse {
 
 export const getProfile = async (): Promise<ProfileResponse> => {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-    
-    if (!token) {
-      console.error("No authentication token found");
-      return { error: "Not authenticated" };
-    }
-    
     const response = await api.get("/profile");
-    
     console.log("Profile data fetched successfully:", response.data);
     return response.data;
   } catch (error: any) {
@@ -58,14 +50,7 @@ export const getProfile = async (): Promise<ProfileResponse> => {
 
 export const updateProfile = async (profileData: ProfileData): Promise<UpdateProfileResponse> => {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-    
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
-    
     const response = await api.patch("/profile/update", profileData);
-    
     return response.data;
   } catch (error: any) {
     console.error("Error updating profile:", error.response?.data || error.message);
@@ -78,24 +63,14 @@ export const updateProfile = async (profileData: ProfileData): Promise<UpdatePro
 
 export const uploadAvatar = async (file: File): Promise<UploadAvatarResponse> => {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-    
-    if (!token) {
-      return { error: "Not authenticated" };
-    }
-    
     const formData = new FormData();
     formData.append("avatar", file);
     
-    const response = await api.post(
-      "/profile/upload",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const response = await api.post("/profile/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     
     return response.data;
   } catch (error: any) {

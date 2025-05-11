@@ -24,15 +24,7 @@ export interface AlbumSongsResponse {
  */
 export const fetchAlbumSongs = async (albumId: string): Promise<AlbumSongsResponse> => {
     try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-        if (!token) {
-            console.error("No authentication token found");
-            return { album: null, songs: [], error: "Not authenticated" };
-        }
-
         const response = await api.get(`/songs/album/${albumId}`);
-
         return response.data;
     } catch (error: any) {
         console.error("Error fetching album songs:", error.response?.data || error.message);
@@ -54,13 +46,6 @@ export const uploadSong = async (
     albumId?: string
 ): Promise<{ success: boolean; error?: string; song?: any }> => {
     try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            console.error("No authentication token found");
-            return { success: false, error: "Not authenticated" };
-        }
-
         if (!albumId) {
             return { success: false, error: "Album ID is required" };
         }
@@ -100,13 +85,6 @@ export const uploadSong = async (
  */
 export const uploadAlbumCover = async (albumId: string, imageFile: File): Promise<{ success: boolean; error?: string; albumPic?: string }> => {
     try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            console.error("No authentication token found");
-            return { success: false, error: "Not authenticated" };
-        }
-
         const formData = new FormData();
         formData.append("album_pic", imageFile);
 
@@ -135,15 +113,7 @@ export const uploadAlbumCover = async (albumId: string, imageFile: File): Promis
  */
 export const deleteSong = async (songId: string): Promise<{ success: boolean; error?: string }> => {
     try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            console.error("No authentication token found");
-            return { success: false, error: "Not authenticated" };
-        }
-
         await api.delete(`/songs/${songId}`);
-
         return { success: true };
     } catch (error: any) {
         console.error("Error deleting song:", error.response?.data || error.message);

@@ -12,10 +12,6 @@ export interface AlbumsResponse {
 
 export const fetchAlbums = async (): Promise<AlbumsResponse> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
     const response = await api.get<AlbumsResponse>(`/albums`);
     return response.data;
   } catch (error) {
