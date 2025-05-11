@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8787';
+import api from './axiosConfig';
 
 export const likeSong = async (songId: string): Promise<void> => {
     try {
@@ -9,15 +7,7 @@ export const likeSong = async (songId: string): Promise<void> => {
             throw new Error('Not authenticated');
         }
 
-        await axios.post(
-            `${API_URL}/songs/${songId}/like`,
-            {},
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        await api.post(`/songs/${songId}/like`);
     } catch (error: any) {
         console.error('Error liking song:', error);
         throw error;
@@ -31,14 +21,7 @@ export const unlikeSong = async (songId: string): Promise<void> => {
             throw new Error('Not authenticated');
         }
 
-        await axios.delete(
-            `${API_URL}/songs/${songId}/unlike`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
+        await api.delete(`/songs/${songId}/unlike`);
     } catch (error: any) {
         console.error('Error unliking song:', error);
         throw error;

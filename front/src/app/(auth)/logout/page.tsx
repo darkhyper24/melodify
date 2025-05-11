@@ -20,6 +20,11 @@ const LogoutPage = () => {
       return;
     }
     
+    // Clear tokens manually in case API call fails
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userRole");
+    
     // Perform logout
     handleLogout(
       () => {}, // setIsAuthenticated parameter

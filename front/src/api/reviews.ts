@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './axiosConfig';
 
 const API_URL = 'http://localhost:8787';
 
@@ -30,11 +30,7 @@ export const getReviews = async (songId: string): Promise<ReviewResponse> => {
             throw new Error('Not authenticated');
         }
 
-        const response = await axios.get(`${API_URL}/reviews/${songId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.get(`/reviews/${songId}`);
         return response.data;
     } catch (error: any) {
         console.error('Error fetching reviews:', error);
@@ -49,16 +45,7 @@ export const createReview = async (songId: string, rating: number): Promise<Revi
             throw new Error('Not authenticated');
         }
 
-        const response = await axios.post(
-            `${API_URL}/reviews/${songId}`,
-            { rating },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+        const response = await api.post(`/reviews/${songId}`, { rating });
         return response.data.review;
     } catch (error: any) {
         console.error('Error creating review:', error);
@@ -73,16 +60,7 @@ export const updateReview = async (songId: string, rating: number): Promise<Revi
             throw new Error('Not authenticated');
         }
 
-        const response = await axios.patch(
-            `${API_URL}/reviews/${songId}`,
-            { rating },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+        const response = await api.patch(`/reviews/${songId}`, { rating });
         return response.data.review;
     } catch (error: any) {
         console.error('Error updating review:', error);
@@ -97,11 +75,7 @@ export const deleteReview = async (songId: string): Promise<void> => {
             throw new Error('Not authenticated');
         }
 
-        await axios.delete(`${API_URL}/reviews/${songId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        await api.delete(`/reviews/${songId}`);
     } catch (error: any) {
         console.error('Error deleting review:', error);
         throw error;
