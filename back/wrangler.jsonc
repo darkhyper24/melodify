@@ -10,9 +10,9 @@
   },
   "assets": {
     "directory": "./public"
-  }
-  
-  // Move these comments inside the main JSON object
+  },
+
+  // Optional features (uncomment and fill in as needed)
   /*
   "kv_namespaces": [
     {
