@@ -1,5 +1,4 @@
 {
-  
   "name": "project",
   "main": "src/index.ts",
   "compatibility_date": "2025-03-30",
@@ -8,9 +7,9 @@
   ],
   "vars": {
     "ENV": "development"
-  },
-  "assets": false
+  }
   
+}
 
   // "kv_namespaces": [
   //   {
@@ -38,4 +37,4 @@
   //   "enabled": true,
   //   "head_sampling_rate": 1
   // }
-}
+
