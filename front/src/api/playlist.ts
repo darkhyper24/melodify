@@ -44,10 +44,6 @@ export interface PlaylistSongsResponse {
 // Get all playlists for the current user
 export const fetchUserPlaylists = async (): Promise<PlaylistsResponse> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
     const response = await api.get('/playlists');
     return response.data;
   } catch (error) {
@@ -59,10 +55,6 @@ export const fetchUserPlaylists = async (): Promise<PlaylistsResponse> => {
 // Create a new playlist
 export const createPlaylist = async (name: string): Promise<PlaylistResponse> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
     const response = await api.post('/playlists/create', { name });
     return response.data;
   } catch (error) {
@@ -74,10 +66,6 @@ export const createPlaylist = async (name: string): Promise<PlaylistResponse> =>
 // Update a playlist's name
 export const updatePlaylistName = async (id: string, name: string): Promise<PlaylistResponse> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
     const response = await api.patch('/playlists/update', { id, name });
     return response.data;
   } catch (error) {
@@ -89,10 +77,6 @@ export const updatePlaylistName = async (id: string, name: string): Promise<Play
 // Get songs in a playlist
 export const fetchPlaylistSongs = async (playlistId: string): Promise<PlaylistSongsResponse> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
     const response = await api.get(`/songs/playlist/${playlistId}`);
     return response.data;
   } catch (error) {
@@ -104,10 +88,6 @@ export const fetchPlaylistSongs = async (playlistId: string): Promise<PlaylistSo
 // Add a song to a playlist
 export const addSongToPlaylist = async (playlistId: string, songId: string): Promise<{ message: string }> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Not authenticated');
-    }
     const response = await api.post(`/songs/playlist/${playlistId}/add`, { songId });
     return response.data;
   } catch (error) {

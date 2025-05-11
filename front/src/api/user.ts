@@ -16,15 +16,7 @@ export interface UserResponse {
  */
 export const getCurrentUser = async (): Promise<UserResponse> => {
   try {
-    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-    
-    if (!token) {
-      console.error("No authentication token found");
-      return { error: "Not authenticated" };
-    }
-    
     const response = await api.get("/auth/me");
-    
     return response.data;
   } catch (error: any) {
     console.error("Error fetching user data:", error.response?.data || error.message);

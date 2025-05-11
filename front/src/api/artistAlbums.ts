@@ -22,14 +22,7 @@ export const fetchArtistAlbums = async (): Promise<ArtistAlbumsResponse> => {
             return { error: "Cannot fetch albums in server context" };
         }
 
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            console.error("No authentication token found");
-            return { error: "Not authenticated" };
-        }
-
-        console.log("Using token for authentication:", token.substring(0, 10) + "...");
+        console.log("Using token for authentication");
 
         const response = await api.get("/albums/my-albums");
 
@@ -45,13 +38,6 @@ export const fetchArtistAlbums = async (): Promise<ArtistAlbumsResponse> => {
 
 export const createAlbum = async (name: string): Promise<{ success: boolean; error?: string; album?: ArtistAlbum }> => {
     try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            console.error("No authentication token found");
-            return { success: false, error: "Not authenticated" };
-        }
-
         const response = await api.post("/albums/create", { name });
 
         return {

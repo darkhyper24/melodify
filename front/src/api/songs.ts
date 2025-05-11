@@ -2,11 +2,6 @@ import api from './axiosConfig';
 
 export const likeSong = async (songId: string): Promise<void> => {
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('Not authenticated');
-        }
-
         await api.post(`/songs/${songId}/like`);
     } catch (error: any) {
         console.error('Error liking song:', error);
@@ -16,11 +11,6 @@ export const likeSong = async (songId: string): Promise<void> => {
 
 export const unlikeSong = async (songId: string): Promise<void> => {
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('Not authenticated');
-        }
-
         await api.delete(`/songs/${songId}/unlike`);
     } catch (error: any) {
         console.error('Error unliking song:', error);
