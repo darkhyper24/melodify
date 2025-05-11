@@ -8,7 +8,8 @@
   ],
   "vars": {
     "ENV": "development"
-  }
+  },
+  "assets": false
   
 
   // "kv_namespaces": [
