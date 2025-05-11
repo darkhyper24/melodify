@@ -7,6 +7,9 @@
   ],
   "vars": {
     "ENV": "development"
+  },
+  "assets": {
+    "directory": "./public"
   }
   
 }
