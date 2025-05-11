@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './axiosConfig';
 import { Song } from '@/providers/PlayerProvider';
 
 // Response types
@@ -53,16 +53,7 @@ export interface ArtistSearchResponse {
 
 export const searchSongs = async (query: string): Promise<Song[]> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axios.get<SearchResponse>(`http://localhost:8787/search/songs?q=${encodeURIComponent(query)}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get<SearchResponse>(`/search/songs?q=${encodeURIComponent(query)}`);
 
     return response.data.songs.map(song => ({
       id: song.id,
@@ -82,16 +73,7 @@ export const searchSongs = async (query: string): Promise<Song[]> => {
 
 export const searchAlbums = async (query: string): Promise<AlbumSearchResult[]> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axios.get<AlbumSearchResponse>(`http://localhost:8787/search/albums?q=${encodeURIComponent(query)}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get<AlbumSearchResponse>(`/search/albums?q=${encodeURIComponent(query)}`);
 
     return response.data.albums;
   } catch (error) {
@@ -102,16 +84,7 @@ export const searchAlbums = async (query: string): Promise<AlbumSearchResult[]> 
 
 export const searchArtists = async (query: string): Promise<ArtistSearchResult[]> => {
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axios.get<ArtistSearchResponse>(`http://localhost:8787/search/artists?q=${encodeURIComponent(query)}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get<ArtistSearchResponse>(`/search/artists?q=${encodeURIComponent(query)}`);
 
     return response.data.artists;
   } catch (error) {

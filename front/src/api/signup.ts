@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "./axiosConfig";
 
 interface SignupPayload {
   email: string;
@@ -10,7 +11,7 @@ interface SignupPayload {
 }
 
 export const signupUser = async (payload: SignupPayload) => {
-  const response = await axios.post("http://localhost:8787/auth/signup", {
+  const response = await api.post("/auth/signup", {
     email: payload.email,
     password: payload.password,
     role: payload.role,
@@ -18,11 +19,17 @@ export const signupUser = async (payload: SignupPayload) => {
     phone: payload.phone,
   });
 
+  // If there's a token in the response (immediate login), store refresh token too
+  if (response.data.user && response.data.refresh_token) {
+    localStorage.setItem("refreshToken", response.data.refresh_token);
+  }
+
   return response.data;
 };
 
 export const signupWithGoogle = async () => {
   try {
+    // For these non-authenticated requests, we don't need to use the api instance
     const response = await axios.post("http://localhost:8787/auth/login/google", {
       isSignup: true
     });
@@ -35,6 +42,7 @@ export const signupWithGoogle = async () => {
 
 export const signupWithFacebook = async () => {
   try {
+    // For these non-authenticated requests, we don't need to use the api instance
     const response = await axios.post("http://localhost:8787/auth/login/facebook");
     return response.data;
   } catch (error) {

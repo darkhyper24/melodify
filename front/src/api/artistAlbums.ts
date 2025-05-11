@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from './axiosConfig';
 
 export interface ArtistAlbum {
     id: string;
@@ -22,29 +22,14 @@ export const fetchArtistAlbums = async (): Promise<ArtistAlbumsResponse> => {
             return { error: "Cannot fetch albums in server context" };
         }
 
-        const token = localStorage.getItem("token");
+        console.log("Using token for authentication");
 
-        if (!token) {
-            console.error("No authentication token found");
-            return { error: "Not authenticated" };
-        }
-
-        console.log("Using token for authentication:", token.substring(0, 10) + "...");
-
-        const response = await axios.get("http://localhost:8787/albums/my-albums", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.get("/albums/my-albums");
 
         return response.data;
     } catch (error: any) {
         console.error("Error fetching artist albums:", error.response?.data || error.message);
-        if (error.response?.status === 401) {
-            console.error("Authentication failed:", error.response?.data);
-            localStorage.removeItem("token");
-            return { error: "Session expired. Please log in again." };
-        }
+        // Token refresh is handled by axios interceptors
         return {
             error: error.response?.data?.error || "Failed to fetch artist albums",
         };
@@ -53,23 +38,7 @@ export const fetchArtistAlbums = async (): Promise<ArtistAlbumsResponse> => {
 
 export const createAlbum = async (name: string): Promise<{ success: boolean; error?: string; album?: ArtistAlbum }> => {
     try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            console.error("No authentication token found");
-            return { success: false, error: "Not authenticated" };
-        }
-
-        const response = await axios.post(
-            "http://localhost:8787/albums/create",
-            { name },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+        const response = await api.post("/albums/create", { name });
 
         return {
             success: true,
@@ -77,11 +46,7 @@ export const createAlbum = async (name: string): Promise<{ success: boolean; err
         };
     } catch (error: any) {
         console.error("Error creating album:", error.response?.data || error.message);
-        if (error.response?.status === 401) {
-            // We're always in the browser context when this is called
-            localStorage.removeItem("token");
-            return { success: false, error: "Session expired. Please log in again." };
-        }
+        // Token refresh is handled by axios interceptors
         return {
             success: false,
             error: error.response?.data?.error || "Failed to create album",
