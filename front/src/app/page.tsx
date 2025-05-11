@@ -12,20 +12,25 @@ const Home = () => {
             const token = localStorage.getItem("token");
             setIsAuthenticated(!!token);
 
-            if (!token) {
-                router.push("/login");
-            } else {
+            // For authenticated users, redirect based on their role
+            if (token) {
                 const userRole = localStorage.getItem("userRole");
                 if (userRole === "artist") {
                     router.push("/artist/home");
                 } else if (userRole === "user") {
                     router.push("/user/home");
                 } else {
-                    router.push("/login");
+                    // If no valid role but token exists, default to user home
+                    router.push("/user/home");
                 }
+            } else {
+                // For unauthenticated users, redirect to user home
+                router.push("/user/home");
             }
         }
     }, [router]);
+    
+    // Return empty component while redirection is happening
     return <></>;
 };
 
