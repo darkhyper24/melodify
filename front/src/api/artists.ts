@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './axiosConfig';
 
 export interface Album {
   id: string;
@@ -10,11 +10,13 @@ export interface AlbumsResponse {
   albums: Album[];
 }
 
-const API_URL = 'http://localhost:8787';
-
 export const fetchAlbums = async (): Promise<AlbumsResponse> => {
   try {
-    const response = await axios.get<AlbumsResponse>(`${API_URL}/albums`);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    const response = await api.get<AlbumsResponse>(`/albums`);
     return response.data;
   } catch (error) {
     console.error('Error fetching albums:', error);

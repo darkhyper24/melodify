@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from "./axiosConfig";
 
 export interface Song {
     id: string;
@@ -30,21 +31,12 @@ export const fetchAlbumSongs = async (albumId: string): Promise<AlbumSongsRespon
             return { album: null, songs: [], error: "Not authenticated" };
         }
 
-        const response = await axios.get(`http://localhost:8787/songs/album/${albumId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.get(`/songs/album/${albumId}`);
 
         return response.data;
     } catch (error: any) {
         console.error("Error fetching album songs:", error.response?.data || error.message);
-        if (error.response?.status === 401) {
-            if (typeof window !== "undefined") {
-                localStorage.removeItem("token");
-            }
-            return { album: null, songs: [], error: "Session expired. Please log in again." };
-        }
+        // Token refresh is handled by axios interceptors
         return {
             error: error.response?.data?.error || "Failed to fetch album songs",
         };
@@ -69,6 +61,10 @@ export const uploadSong = async (
             return { success: false, error: "Not authenticated" };
         }
 
+        if (!albumId) {
+            return { success: false, error: "Album ID is required" };
+        }
+
         const formData = new FormData();
         formData.append("title", title);
         formData.append("category", category);
@@ -77,13 +73,10 @@ export const uploadSong = async (
         // Add cover file if provided
         if (coverFile) {
             formData.append("cover", coverFile);
-        } if (!albumId) {
-            return { success: false, error: "Album ID is required" };
         }
 
-        const response = await axios.post(`http://localhost:8787/songs/create/${albumId}`, formData, {
+        const response = await api.post(`/songs/create/${albumId}`, formData, {
             headers: {
-                Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data",
             },
         });
@@ -94,10 +87,7 @@ export const uploadSong = async (
         };
     } catch (error: any) {
         console.error("Error uploading song:", error.response?.data || error.message);
-        if (error.response?.status === 401) {
-            localStorage.removeItem("token");
-            return { success: false, error: "Session expired. Please log in again." };
-        }
+        // Token refresh is handled by axios interceptors
         return {
             success: false,
             error: error.response?.data?.error || "Failed to upload song",
@@ -120,9 +110,8 @@ export const uploadAlbumCover = async (albumId: string, imageFile: File): Promis
         const formData = new FormData();
         formData.append("album_pic", imageFile);
 
-        const response = await axios.post(`http://localhost:8787/albums/${albumId}/upload`, formData, {
+        const response = await api.post(`/albums/${albumId}/upload`, formData, {
             headers: {
-                Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data",
             },
         });
@@ -133,10 +122,7 @@ export const uploadAlbumCover = async (albumId: string, imageFile: File): Promis
         };
     } catch (error: any) {
         console.error("Error uploading album cover:", error.response?.data || error.message);
-        if (error.response?.status === 401) {
-            localStorage.removeItem("token");
-            return { success: false, error: "Session expired. Please log in again." };
-        }
+        // Token refresh is handled by axios interceptors
         return {
             success: false,
             error: error.response?.data?.error || "Failed to upload album cover",
@@ -156,19 +142,12 @@ export const deleteSong = async (songId: string): Promise<{ success: boolean; er
             return { success: false, error: "Not authenticated" };
         }
 
-        await axios.delete(`http://localhost:8787/songs/${songId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        await api.delete(`/songs/${songId}`);
 
         return { success: true };
     } catch (error: any) {
         console.error("Error deleting song:", error.response?.data || error.message);
-        if (error.response?.status === 401) {
-            localStorage.removeItem("token");
-            return { success: false, error: "Session expired. Please log in again." };
-        }
+        // Token refresh is handled by axios interceptors
         if (error.response?.status === 403) {
             return { success: false, error: "You don't have permission to delete this song" };
         }
@@ -194,19 +173,12 @@ export const fetchAlbumById = async (albumId: string): Promise<{ album: any; err
             return { album: null, error: "Not authenticated" };
         }
 
-        const response = await axios.get(`http://localhost:8787/albums/${albumId}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const response = await api.get(`/albums/${albumId}`);
 
         return response.data;
     } catch (error: any) {
         console.error("Error fetching album details:", error.response?.data || error.message);
-        if (error.response?.status === 401) {
-            localStorage.removeItem("token");
-            return { album: null, error: "Session expired. Please log in again." };
-        }
+        // Token refresh is handled by axios interceptors
         return {
             album: null,
             error: error.response?.data?.error || "Failed to fetch album details",

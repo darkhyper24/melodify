@@ -17,6 +17,7 @@ export const handleLogout = async (setIsAuthenticated: (v: boolean) => void, nav
 
         if (response.ok) {
             localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
             localStorage.removeItem("user");
             localStorage.removeItem("userRole");
 

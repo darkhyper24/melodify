@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './axiosConfig';
 
 export interface Playlist {
   id: string;
@@ -41,17 +41,14 @@ export interface PlaylistSongsResponse {
   songs: PlaylistSong[];
 }
 
-const API_URL = 'http://localhost:8787';
-
 // Get all playlists for the current user
 export const fetchUserPlaylists = async (): Promise<PlaylistsResponse> => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/playlists`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    const response = await api.get('/playlists');
     return response.data;
   } catch (error) {
     console.error('Error fetching playlists:', error);
@@ -63,16 +60,10 @@ export const fetchUserPlaylists = async (): Promise<PlaylistsResponse> => {
 export const createPlaylist = async (name: string): Promise<PlaylistResponse> => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.post(
-      `${API_URL}/playlists/create`, 
-      { name },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    const response = await api.post('/playlists/create', { name });
     return response.data;
   } catch (error) {
     console.error('Error creating playlist:', error);
@@ -84,16 +75,10 @@ export const createPlaylist = async (name: string): Promise<PlaylistResponse> =>
 export const updatePlaylistName = async (id: string, name: string): Promise<PlaylistResponse> => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.patch(
-      `${API_URL}/playlists/update`,
-      { id, name },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    const response = await api.patch('/playlists/update', { id, name });
     return response.data;
   } catch (error) {
     console.error('Error updating playlist:', error);
@@ -105,11 +90,10 @@ export const updatePlaylistName = async (id: string, name: string): Promise<Play
 export const fetchPlaylistSongs = async (playlistId: string): Promise<PlaylistSongsResponse> => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/songs/playlist/${playlistId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    const response = await api.get(`/songs/playlist/${playlistId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching playlist songs:', error);
@@ -121,16 +105,10 @@ export const fetchPlaylistSongs = async (playlistId: string): Promise<PlaylistSo
 export const addSongToPlaylist = async (playlistId: string, songId: string): Promise<{ message: string }> => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.post(
-      `${API_URL}/songs/playlist/${playlistId}/add`,
-      { songId },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    const response = await api.post(`/songs/playlist/${playlistId}/add`, { songId });
     return response.data;
   } catch (error) {
     console.error('Error adding song to playlist:', error);

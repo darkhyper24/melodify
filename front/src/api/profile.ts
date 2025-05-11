@@ -1,4 +1,5 @@
 import axios from "axios";
+import api from './axiosConfig';
 
 export interface ProfileData {
   fullName?: string;
@@ -42,22 +43,13 @@ export const getProfile = async (): Promise<ProfileResponse> => {
       return { error: "Not authenticated" };
     }
     
-    const response = await axios.get("http://localhost:8787/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get("/profile");
     
     console.log("Profile data fetched successfully:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("Error fetching profile:", error.response?.data || error.message);
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("token");
-      }
-      return { error: "Session expired. Please log in again." };
-    }
+    // The token refresh is handled by axios interceptors, so we only handle other errors here
     return { 
       error: error.response?.data?.error || "Failed to fetch profile" 
     };
@@ -72,26 +64,12 @@ export const updateProfile = async (profileData: ProfileData): Promise<UpdatePro
       return { error: "Not authenticated" };
     }
     
-    const response = await axios.patch(
-      "http://localhost:8787/profile/update",
-      profileData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await api.patch("/profile/update", profileData);
     
     return response.data;
   } catch (error: any) {
     console.error("Error updating profile:", error.response?.data || error.message);
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("token");
-      }
-      return { error: "Session expired. Please log in again." };
-    }
+    // The token refresh is handled by axios interceptors, so we only handle other errors here
     return { 
       error: error.response?.data?.error || "Failed to update profile" 
     };
@@ -109,12 +87,11 @@ export const uploadAvatar = async (file: File): Promise<UploadAvatarResponse> =>
     const formData = new FormData();
     formData.append("avatar", file);
     
-    const response = await axios.post(
-      "http://localhost:8787/profile/upload",
+    const response = await api.post(
+      "/profile/upload",
       formData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       }
@@ -123,12 +100,7 @@ export const uploadAvatar = async (file: File): Promise<UploadAvatarResponse> =>
     return response.data;
   } catch (error: any) {
     console.error("Error uploading avatar:", error.response?.data || error.message);
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("token");
-      }
-      return { error: "Session expired. Please log in again." };
-    }
+    // Token refresh is handled by axios interceptors
     return { 
       error: error.response?.data?.error || "Failed to upload avatar" 
     };

@@ -43,7 +43,6 @@ self.addEventListener('fetch', (event) => {
 
  
   
-  // Handle music file requests
   if ( url.pathname.includes('')) {
     event.respondWith(
       caches.open(MUSIC_CACHE_NAME).then((cache) => {

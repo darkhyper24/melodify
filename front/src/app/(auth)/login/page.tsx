@@ -24,6 +24,9 @@ const LoginPage = () => {
         onSuccess: (data) => {
             if (data.access_token) {
                 localStorage.setItem("token", data.access_token);
+                if (data.refresh_token) {
+                    localStorage.setItem("refreshToken", data.refresh_token);
+                }
                 if (data.user?.role) {
                     localStorage.setItem("userRole", data.user.role);
                 }

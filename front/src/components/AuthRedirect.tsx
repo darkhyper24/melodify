@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/api/user";
+import api from "@/api/axiosConfig";
 
 export default function AuthRedirect() {
     const router = useRouter();
@@ -13,6 +14,8 @@ export default function AuthRedirect() {
             try {
                 // Check if user is authenticated
                 const token = localStorage.getItem("token");
+                const refreshToken = localStorage.getItem("refreshToken");
+                
                 if (!token) {
                     router.push("/login");
                     return;
@@ -21,9 +24,12 @@ export default function AuthRedirect() {
                 // Get user role
                 const userResponse = await getCurrentUser();
                 if (userResponse.error) {
-                    localStorage.removeItem("token");
-                    router.push("/login");
-                    return;
+                    // If there's an error even after potential token refresh, redirect to login
+                    if (!refreshToken) {
+                        localStorage.removeItem("token");
+                        router.push("/login");
+                        return;
+                    }
                 }
 
                 // Redirect based on role

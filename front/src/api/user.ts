@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from './axiosConfig';
 
 export interface UserData {
   id: string;
@@ -23,21 +23,12 @@ export const getCurrentUser = async (): Promise<UserResponse> => {
       return { error: "Not authenticated" };
     }
     
-    const response = await axios.get("http://localhost:8787/auth/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get("/auth/me");
     
     return response.data;
   } catch (error: any) {
     console.error("Error fetching user data:", error.response?.data || error.message);
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("token");
-      }
-      return { error: "Session expired. Please log in again." };
-    }
+    // Token refresh is handled by axios interceptors
     return { 
       error: error.response?.data?.error || "Failed to fetch user data" 
     };
