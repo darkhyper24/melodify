@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { createContext, useContext, useState, useRef, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useRef, useEffect } from "react";
 
 // Define the song type
 export interface Song {
@@ -119,26 +119,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const [playbackSpeed, setPlaybackSpeed] = useState(1); // Default speed is 1x
     const [queue, setQueue] = useState<Song[]>([]);
     const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
-    const [isOffline, setIsOffline] = useState(false);
 
     // References
     const audioRef = useRef<HTMLAudioElement>(null);
-
-    useEffect(() => {
-        // Monitor online/offline status
-        const handleOnline = () => setIsOffline(false);
-        const handleOffline = () => setIsOffline(true);
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        setIsOffline(!navigator.onLine);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, []);
 
     // Format time in MM:SS
     const formatTime = (time: number) => {
@@ -151,31 +134,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Play a specific song
-    const playSong = useCallback(async (song: Song) => {
-        try {
-            // Check if song is available in cache when offline
-            if (isOffline) {
-                const cache = await caches.open('melodify-music-cache-v1');
-                const cachedResponse = await cache.match(song.songUrl);
-                
-                if (!cachedResponse) {
-                    throw new Error('Song not available offline');
-                }
-            }
-
-            setCurrentSong({
-                ...song,
-                lyrics: Array.isArray(song.lyrics) ? song.lyrics : [],
-            });
-            // Clear the queue when playing a single song
-            setQueue([]);
-            setCurrentQueueIndex(-1);
-            setIsPlaying(true);
-        } catch (error) {
-            console.error('Error playing song:', error);
-            // Handle error (show notification to user)
-        }
-    }, [isOffline]);
+    const playSong = (song: Song) => {
+        setCurrentSong({
+            ...song,
+            lyrics: Array.isArray(song.lyrics) ? song.lyrics : [],
+        });
+        // Clear the queue when playing a single song
+        setQueue([]);
+        setCurrentQueueIndex(-1);
+        setIsPlaying(true);
+    };
 
     // Play a queue of songs starting at a specific index
     const playQueue = (songs: Song[], startIndex: number) => {
