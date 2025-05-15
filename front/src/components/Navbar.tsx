@@ -8,9 +8,10 @@ import { useSearch } from "@/hooks/useSearch";
 
 const Navbar = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [authChecked, setAuthChecked] = useState(false); // New state to track auth check completion
     const [userRole, setUserRole] = useState<string | null>(null);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-    // Use the custom search hook
+
     const { searchQuery, handleSearchChange, handleSearchSubmit } = useSearch();
 
     useEffect(() => {
@@ -29,6 +30,8 @@ const Navbar = () => {
             } catch (error) {
                 console.error("Error checking authentication:", error);
                 setIsAuthenticated(false);
+            } finally {
+                setAuthChecked(true); // Mark auth check as done
             }
         };
 
@@ -63,28 +66,26 @@ const Navbar = () => {
         }
     };
 
-    // Search logic has been moved to the useSearch hook
-
     return (
         <nav className="bg-black/90 sticky w-full top-0 right-0 py-4 z-40">
             <div className="flex items-center w-full px-8 box-border max-md:px-4">
                 {userRole === "artist" ? (
                     <Link href="/artist/home" className="mr-auto">
-                        <Image 
-                            src="/logo.png" 
-                            alt="Melodify Logo" 
-                            width={130} 
-                            height={40} 
+                        <Image
+                            src="/logo.png"
+                            alt="Melodify Logo"
+                            width={130}
+                            height={40}
                             className="object-contain"
                         />
                     </Link>
                 ) : (
                     <Link href="/user/home" className="mr-auto">
-                        <Image 
-                            src="/logo.png" 
-                            alt="Melodify Logo" 
-                            width={130} 
-                            height={40} 
+                        <Image
+                            src="/logo.png"
+                            alt="Melodify Logo"
+                            width={130}
+                            height={40}
                             className="object-contain"
                         />
                     </Link>
@@ -103,23 +104,25 @@ const Navbar = () => {
                 </div>
 
                 <div className="flex items-center gap-2 max-md:gap-4">
-                    {!isAuthenticated ? (
-                        <>
-                            <Link
-                                href="/signup"
-                                className="text-[#a7a7a7] bg-transparent px-6 py-2 rounded-full font-bold transition-all duration-200 hover:text-white hover:scale-105 text-sm"
-                            >
-                                Sign up
-                            </Link>
-                            <Link
-                                href="/login"
-                                className="text-black bg-white px-6 py-3 rounded-full font-bold transition-all duration-200 hover:bg-[#F0F0F0] hover:scale-105 text-sm"
-                            >
-                                Log in
-                            </Link>
-                        </>
-                    ) : (
-                        <ProfileDropdown setIsAuthenticated={setIsAuthenticated} avatarUrl={avatarUrl} />
+                    {authChecked && (
+                        isAuthenticated ? (
+                            <ProfileDropdown setIsAuthenticated={setIsAuthenticated} avatarUrl={avatarUrl} />
+                        ) : (
+                            <>
+                                <Link
+                                    href="/signup"
+                                    className="text-[#a7a7a7] bg-transparent px-6 py-2 rounded-full font-bold transition-all duration-200 hover:text-white hover:scale-105 text-sm"
+                                >
+                                    Sign up
+                                </Link>
+                                <Link
+                                    href="/login"
+                                    className="text-black bg-white px-6 py-3 rounded-full font-bold transition-all duration-200 hover:bg-[#F0F0F0] hover:scale-105 text-sm"
+                                >
+                                    Log in
+                                </Link>
+                            </>
+                        )
                     )}
                 </div>
             </div>

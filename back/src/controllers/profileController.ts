@@ -38,6 +38,35 @@ export const getProfile = async (c: Context) => {
   }
 }
 
+// Get all artists
+export const getAllArtists = async (c: Context) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, role, bio')
+      .eq('role', 'artist')
+      .order('full_name', { ascending: true })
+    
+    if (error) {
+      console.error('Error fetching artists:', error)
+      return c.json({ error: 'Failed to fetch artists' }, 500)
+    }
+    
+    return c.json({
+      artists: data.map((artist: { id: string; full_name: string; avatar_url: string | null; role: string; bio: string | null }) => ({
+        id: artist.id,
+        fullName: artist.full_name,
+        avatarUrl: artist.avatar_url,
+        role: artist.role,
+        bio: artist.bio
+      }))
+    }, 200)
+  } catch (error: unknown) {
+    console.error('Unexpected error in getAllArtists:', error)
+    return c.json({ error: 'Server error fetching artists' }, 500)
+  }
+}
+
 // Updating profile information (fullname, bio, phone)
 export const updateProfile = async (c: Context) => {
   try {

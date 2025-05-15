@@ -12,14 +12,18 @@ type AlbumData = {
 // Get all albums with names and pictures only
 export const getAlbums = async (c: Context) => {
     try {
-        // Get all albums - we still query all these fields for sorting/filtering
+        // Get all albums with artist information
         const { data: albums, error } = await supabase
             .from("album")
             .select(
                 `id,
         name, 
         album_pic, 
-        created_at
+                created_at,
+                user_id,
+                profiles (
+                    full_name
+                )
       `
             )
             .order("created_at", { ascending: false });
@@ -29,13 +33,14 @@ export const getAlbums = async (c: Context) => {
             return c.json({ error: "Failed to fetch albums" }, 500);
         }
 
-        // Return only name and album_pic
+        // Return with artist information
         return c.json(
             {
-                albums: albums.map((album: AlbumData) => ({
+                albums: albums.map((album: any) => ({
                     id: album.id,
                     name: album.name,
                     albumPic: album.album_pic,
+                    artistName: album.profiles?.full_name || "Unknown Artist"
                 })),
             },
             200
